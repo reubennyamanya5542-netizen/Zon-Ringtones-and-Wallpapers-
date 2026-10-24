@@ -396,6 +396,7 @@ let ac;function tone(freqs,dur=1.2){try{ac=ac||new (window.AudioContext||window.
 let S={consent:null,theme:'dark',saver:false,fav:[],dl:[],meta:{},size:{}};
 try{Object.assign(S,JSON.parse(localStorage.getItem('zon')||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem('zon',JSON.stringify(S))}catch(e){}};
+const AOD_MODE=location.hash=='#aod';
 let tab='explore',kind='w',chip='All',Q='',vkind='a',sortNew=false;
 let CAT={a:[],w:[],feat:[],cols:[]},ALL={};
 
@@ -771,7 +772,7 @@ function startAod(){$('aod').classList.add('show');clearTimeout(aodT);loop();
  if(AO.offS)offT=setTimeout(stopAod,AO.offS*1000);
  try{const r=document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();Promise.resolve(r).then(lockRot).catch(lockRot)}catch(e){lockRot()}
  native('setAutoRotate',!!AO.rot)}
-function stopAod(){$('aod').classList.remove('show');clearTimeout(aodT);clearInterval(shiftT);clearTimeout(offT);try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}try{document.fullscreenElement&&document.exitFullscreen()}catch(e){}}
+function stopAod(){if(AOD_MODE)native('finishAod');$('aod').classList.remove('show');clearTimeout(aodT);clearInterval(shiftT);clearTimeout(offT);try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}try{document.fullscreenElement&&document.exitFullscreen()}catch(e){}}
 function shift(){$('aodin').style.transform=`translate(${(Math.random()*40-20)|0}px,${(Math.random()*60-30)|0}px)`} /* burn-in protection */
 const isLand=()=>innerWidth>innerHeight*1.1;
 const aodK=()=>isLand()?Math.max(.35,Math.min(innerWidth/760,innerHeight/340,3.2)):Math.max(.35,Math.min(innerWidth/400,innerHeight/620,3.2));
@@ -790,7 +791,7 @@ function openStudio(){$('studio').classList.add('show');drawStudio();clearTimeou
 function closeStudio(){$('studio').classList.remove('show');clearTimeout(studioT)}
 function refreshPv(){const e=$('pvAod');if(e)paintAod(e,AO.tsize*.36*((e.clientWidth||122)/122),false,AO.sim)}
 function setAO(k,v){AO[k]=v;saveAO();refreshPv()}
-function tg(k){AO[k]=!AO[k];saveAO();drawStudio()}
+function tg(k){AO[k]=!AO[k];saveAO();if(k=='bg'&&!native('setBackground',!!AO.bg))toast('Works only in the installed app');drawStudio()}
 function pick(k,v){AO[k]=v;saveAO();drawStudio()}
 function usePreset(n){const p=n=='Mine'?JSON.parse(localStorage.getItem('zonAodMine')||'{}'):PRESETS[n];Object.assign(AO,p);saveAO();drawStudio()}
 function saveMine(){try{localStorage.setItem('zonAodMine',JSON.stringify(AO));try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}toast('\u2713 Saved as My preset');drawStudio()}catch(e){toast('Could not save preset')}}
@@ -828,6 +829,7 @@ function settingsHTML(){
  ${sw('notif','Notification pills','Stacked carousel. Needs Notification access on device')}
  ${sw('media','Music player controls','Track, artist and play controls. Needs Notification access on device')}
  ${sw('quote','Daily Vibe quote','A short motivational line each day')}
+ ${sw('bg','Run on lock screen','Shows the AOD when the screen turns off. Needs Display over other apps')}
  ${sw('short','Quick shortcuts','Two buttons at the bottom of the screen')}
  ${pr('sl','Left shortcut')}${pr('sr','Right shortcut')}
  ${sw('rot','Auto-rotate','Clock switches to a landscape layout when you flip the phone sideways')}
@@ -845,7 +847,7 @@ function drawStudio(){const sc=$('studio').scrollTop,sbE=document.querySelector(
 /* ---------- Boot ---------- */
 applyTheme();
 ['splashLogo','consentLogo','topLogo'].forEach(i=>$(i).innerHTML=logoEl());
-setTimeout(()=>{$('splash').classList.add('out');if(S.consent!==POLICY_VERSION)$('consent').style.display='flex'},1700);
+if(AOD_MODE){$('splash').style.display='none';$('consent').style.display='none';startAod()}else{setTimeout(()=>{$('splash').classList.add('out');if(S.consent!==POLICY_VERSION)$('consent').style.display='flex'},1700);if(AO.bg)native('setBackground',true)}
 loadCatalog();
 addEventListener('resize',()=>{if($('aod').classList.contains('show'))tick();refreshPv()});
 </script>
