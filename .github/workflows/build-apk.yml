@@ -2,7 +2,7 @@ name: Build APK
 on:
   push:
     branches: [main]
-    paths: ['index.html', 'icon.png', 'native/**', 'package.json', 'capacitor.config.json', '.github/workflows/build-apk.yml']
+    paths: ['index.html', 'native/**', 'package.json', 'capacitor.config.json', 'debug.keystore', '.github/workflows/build-apk.yml']
   workflow_dispatch:
 jobs:
   apk:
@@ -27,19 +27,10 @@ jobs:
           cp native/*.java $D/
           python3 native/patch_manifest.py
           sed -i 's/minSdkVersion = .*/minSdkVersion = 29/' android/variables.gradle
-          pip install pillow
-          python3 - <<'PY'
-          import os, shutil
-          from PIL import Image
-          r = 'android/app/src/main/res'
-          shutil.rmtree(r + '/mipmap-anydpi-v26', ignore_errors=True)
-          im = Image.open('icon.png').convert('RGBA')
-          for d, z in {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}.items():
-              p = f'{r}/mipmap-{d}'; os.makedirs(p, exist_ok=True)
-              for n in ('ic_launcher', 'ic_launcher_round', 'ic_launcher_foreground'):
-                  im.resize((z, z), Image.LANCZOS).save(f'{p}/{n}.png')
-          PY
           npx cap sync android
+      - name: Use the same signing key every build
+        run: |
+          if [ -f debug.keystore ]; then mkdir -p ~/.android && cp debug.keystore ~/.android/debug.keystore; else echo "No debug.keystore in the repo, so this build gets a random key"; fi
       - name: Build
         working-directory: android
         run: chmod +x gradlew && ./gradlew assembleDebug
