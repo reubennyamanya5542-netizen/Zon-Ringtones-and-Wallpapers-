@@ -534,8 +534,8 @@ function wcard(it,cls,ctx){return `<div class="card ${cls}" onclick="wallView('$
 function arow(it,mode){return `<div class="item"><div class="cov" style="background:${it.g}" onclick="playItem(ALL['${it.id}'])">${art(it)}<span class="pl">${ic(I.play)}</span></div>
  <div class="t" onclick="${mode=='vault'?`sheet('${it.id}')`:`audioView('${it.id}')`}"><b>${it.title}</b><small>${it.cat}${it.dur?' · '+it.dur:''}</small></div>
  ${mode=='vault'?`<button class="ib" onclick="sheet('${it.id}')">${ic(I.more)}</button>`:`<button class="ib ${S.fav.includes(it.id)?'on':''}" onclick="toggleFav('${it.id}')">${ic(I.heart)}</button><button class="ib ${S.dl.includes(it.id)?'ok':''}" onclick="download('${it.id}')">${ic(S.dl.includes(it.id)?I.check:I.dl)}</button>`}</div>`}
-const WCATS=['AMOLED','Trending','Cars','Nature','Anime','Aesthetic','Abstract','Space','Gaming','Minimal','Dark','Gradient','Neon','Architecture','Animals','Art','Black and White','Cities','Beach','Mountains','Forest','Sunset','Sky','Flowers','Food','Fashion','Travel','Quotes','Motivation','Memes','Sports','Football','Cricket','Superheroes','Movies','Music','Technology','Cartoon','Cute','Love','Vintage','Pattern','3D','Street','Bikes','Luxury','Islamic','Spiritual','Festivals','Holiday','Couples','Friends','Funny','Illustration','Fantasy','Sci-Fi','Horror','Wildlife','Underwater','Rain','Winter','Autumn','Spring','Summer','Texture','Marble','Typography','Pixel Art','Retro','Cyberpunk'];
-const ACATS=['Trending','Instrumental','Bollywood','Hip-Hop','Lo-fi','Phonk','EDM','Classical','Piano','Guitar','Flute','Notification','Alarm','SMS Tone','Nature Sounds','Islamic','Devotional','Romantic','Sad','Movie BGM','Phone Rings','Vintage Phone','Love Songs','Hindi','Tamil','Telugu','Punjabi','Malayalam','Kannada','English','K-Pop'];
+const WCATS=['AMOLED','Trending','Cars','Nature','Anime','Aesthetic','Abstract','Space','Gaming','Minimal','Dark','Gradient','Neon','Architecture','Animals','Art','Black and White','Cities','Beach','Mountains','Forest','Sunset','Sky','Flowers','Food','Fashion','Travel','Quotes','Motivation','Memes','Sports','Football','Cricket','Superheroes','Movies','Music','Technology','Cartoon','Cute','Love','Vintage','Pattern','3D','Street','Bikes','Luxury','Islamic','Spiritual','Festivals','Holiday','Couples','Friends','Funny','Illustration','Fantasy','Sci-Fi','Horror','Wildlife','Underwater','Rain','Winter','Autumn','Spring','Summer','Texture','Marble','Typography','Pixel Art','Retro','Cyberpunk','Pastel','Supercars','Sports Cars','Classic Cars','Bikes and Motorcycles','Trucks','Airplanes','Trains','Ships and Boats','Racing and F1','Landscapes','Beaches and Ocean','Waterfalls','Sunset and Sunrise','Sky and Clouds','Winter and Snow','Desert','Lakes and Rivers','Space and Galaxy','Moon and Stars','Planets','Northern Lights','Dogs','Cats','Birds','Lions and Tigers','Horses','Butterflies and Insects','Games','TV Shows','Celebrities','K-pop','Basketball','Boxing and MMA','Gym and Fitness','Tennis','Olympics','Love and Romance','Friendship','Family','Kids','Baby','Wedding','Food and Drinks','Coffee','Cities and Night','Watches','Jewelry','Letters and Names','Spiritual and Faith','Success and Money','Sad and Alone','Art and Painting','3D and CGI','Digital Art','Futuristic','Lo-fi','Vintage and Retro','Patterns and Textures','Geometric','Glass and Blur','Liquid and Fluid','Fire and Water','Smoke and Light','Fireworks','Horror and Dark Art','Skulls','Gothic','Villains','Emoji','Kawaii','WhatsApp DP','Profile Pictures','Status and Stories','Festivals and Holidays','Christmas','Ramadan and Eid','Halloween','New Year','Valentine'];
+const ACATS=['Trending','Instrumental','Bollywood','Hip-Hop','Lo-fi','Phonk','EDM','Classical','Piano','Guitar','Flute','Notification','Alarm','SMS Tone','Nature Sounds','Islamic','Devotional','Romantic','Sad','Movie BGM','Phone Rings','Vintage Phone','Love Songs','Hindi','Tamil','Telugu','Punjabi','Malayalam','Kannada','English','K-Pop','Motivation','Memes','Funny','Viral','Classic Ring','Old Phone','Retro 8-bit','Bells','Whistle','Sci-Fi','Horror and Spooky','Anime and Game','Movie Themes','TV Themes','Violin','Drums and Percussion','Orchestral','Cinematic','Pop','Rock','R and B','Jazz','Blues','Country','Reggae','Afrobeats','Amapiano','Latin','Gospel and Worship','Nasheed and Islamic','Notification Pings','Message Tones','Email and Chat','Short Beeps','Voice Alerts','Alarm Clocks','Wake Up','Gentle Alarm','Loud Alarm','Morning Birds','Meditation','Sleep','Rain and Ocean','Birds','White Noise','ASMR','Love and Romantic','Happy','Chill','Epic','Sports and Gym','Sound Effects','Funny Voices','Animals','Cartoon','Kids','Baby','Name Ringtones'];
 function chipsHTML(list){const fixed=kind=='a'?ACATS:WCATS;const cs=['All',...new Set([...fixed,...list.map(x=>x.cat)])];return `<div class="chips">${cs.map(c=>`<button class="chip ${c==chip?'on':''}" onclick="chip='${c}';explore()">${c}</button>`).join('')}</div>`}
 function explore(){
  const base=kind=='a'?CAT.a:CAT.w,q=Q.trim().toLowerCase();
@@ -548,6 +548,7 @@ function explore(){
    <button onclick="sortNew=true;explore()"><span>${ic(I.new)}</span>Newest</button>
    <button onclick="chip='AMOLED';explore()"><span>${ic(I.moon)}</span>AMOLED</button>
    <button onclick="go('fav')"><span>${ic(I.heart)}</span>Favorites</button></div>`;
+  h+=chipsHTML(base);
   if(CAT.feat.length)h+=`<h3 class="sec">Featured</h3><div class="hs">${CAT.feat.map(x=>wcard(x,'f','feat')).join('')}</div>`;
   if(CAT.cols.length)h+=`<h3 class="sec">Popular Collections</h3><div class="hs">${CAT.cols.map(c=>`<div class="card c" style="--b:${c.color}" onclick="chip='${c.name}';explore()">${art(c.items[0])}<div class="lab">${c.name}</div></div>`).join('')}</div>`;
   h+=`<h3 class="sec">Popular</h3>`}
@@ -569,7 +570,7 @@ function set(){const tn={dark:'Dark',light:'Light',system:'System Default'}[S.th
  <div class="row"><div>Local cache<small>${cacheMB()} MB used · ${S.dl.length} items</small></div><button class="chip on" onclick="clearCache()">Clear Offline Cache</button></div>
  <div class="row"><div>Back up<small>Save favorites and screen saver settings to a file</small></div><button class="chip on" onclick="backupData()">Back up</button></div>
  <div class="row"><div>Restore<small>Load a Zon backup file</small></div><button class="chip on" onclick="$('bkIn').click()">Restore</button><input type="file" id="bkIn" accept=".json,application/json" style="display:none" onchange="restoreData(this)"></div>
- <div class="sfoot"><a onclick="openSub('about')">About Zon</a>·<a onclick="openSub('privacy')">Privacy Policy</a>·<a onclick="openSub('terms')">Terms of Use</a><div>Zon 1.0.0</div></div></div>`}
+ <div class="sfoot"><a onclick="openSub('about')">About Zon</a>·<a onclick="openSub('privacy')">Privacy Policy</a>·<a onclick="openSub('terms')">Terms of Use</a><div>Zon v20.34.12</div></div></div>`}
 function backupData(){const keep={};S.fav.forEach(id=>{if(S.meta[id])keep[id]=S.meta[id]});let mine=null;try{mine=JSON.parse(localStorage.getItem('zonAodMine')||'null')}catch(e){}
  const txt=JSON.stringify({zon:1,S:{fav:S.fav,meta:keep,theme:S.theme,saver:S.saver},AO,mine}),name='zon-backup.json';
  if(!native('saveText',name,txt)){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;a.click();toast('Backup saved')}}
@@ -706,7 +707,7 @@ async function applyWall(id,where){closeSheet();const it=ALL[id]||S.meta[id];
 
 /* ---------- About / legal ---------- */
 const SUBS={
- about:()=>`<div style="text-align:center"><div class="lg" style="width:6rem;height:6rem;margin:0.625rem auto">${logoEl()}</div><h2>Zon</h2><p>Version 1.0.0</p></div>
+ about:()=>`<div style="text-align:center"><div class="lg" style="width:6rem;height:6rem;margin:0.625rem auto">${logoEl()}</div><h2>Zon</h2><p>Version 20.34.12</p></div>
   <p>Zon is a lightweight, offline-first vault of curated ringtones, notification sounds and wallpapers, with a pitch-black screen saver for AMOLED phones.</p>
   <p><b>By Zon Inc.</b></p><p>Contact: <span class="link">support@zon.app</span> (replace with your real address)</p>
   <p><span class="link" onclick="openSub('privacy')">Privacy Policy</span> · <span class="link" onclick="openSub('terms')">Terms of Use</span></p>`,
@@ -1053,7 +1054,8 @@ function drawStudio(){const sc=$('studio').scrollTop,sbE=document.querySelector(
 /* Closes the top-most layer first, then goes back to Explore, then asks to press again to exit.
    Native wrapper: call window.zonBack() from onBackPressed; exit only if it returns false. */
 let exitArm=0;
-function zonBack(){
+function zonBack(){try{return zonBack0()}catch(e){return true}}
+function zonBack0(){
  const on=id=>{const e=$(id);return !!(e&&e.classList.contains('show'))};
  if($('consent').style.display=='flex')return false;
  if(on('mp')){closeMP();return true}
@@ -1069,10 +1071,11 @@ function zonBack(){
  if(Date.now()<exitArm)return false;
  exitArm=Date.now()+2000;toast('Press back again to exit');return true}
 window.zonBack=zonBack;
+document.addEventListener('backbutton',e=>{if(e&&e.preventDefault)e.preventDefault();if(!zonBack()&&!native('exitApp')&&navigator.app&&navigator.app.exitApp)navigator.app.exitApp()},false);
 try{history.replaceState({zon:0},'');history.pushState({zon:1},'');
  /* keep one history step ahead: after a real tap Android keeps the step, so Back always reaches zonBack() first */
- const arm=()=>{try{if(!(history.state&&history.state.zon===1))history.pushState({zon:1},'')}catch(e){}};
- addEventListener('pointerup',arm,true);addEventListener('touchend',arm,true);
+ let armed=false;const arm=()=>{try{if(!armed||!(history.state&&history.state.zon===1)){armed=true;history.pushState({zon:1},'')}}catch(e){}};
+ addEventListener('pointerup',arm,true);addEventListener('touchend',arm,true);addEventListener('click',arm,true);addEventListener('keydown',arm,true);
  addEventListener('popstate',()=>{if(zonBack())arm();else if(!native('exitApp'))history.back()})}catch(e){}
 try{const A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.addListener)A.addListener('backButton',()=>{if(!zonBack()&&!native('exitApp')&&A.exitApp)A.exitApp()})}catch(e){}
 
