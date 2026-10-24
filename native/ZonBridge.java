@@ -8,7 +8,13 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.*;
 import android.provider.*;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebView;
+import androidx.activity.ComponentActivity;
+import androidx.activity.OnBackPressedCallback;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 import android.util.Base64;
@@ -17,7 +23,50 @@ import java.net.URL;
 
 public class ZonBridge {
   final Activity a; final Context c;
-  ZonBridge(Activity act) { a = act; c = act.getApplicationContext(); }
+  static int hookedId = -1;
+  ZonBridge(Activity act) { a = act; c = act.getApplicationContext(); hookBack(); }
+
+  WebView findWeb(View v) {
+    if (v instanceof WebView) return (WebView) v;
+    if (v instanceof ViewGroup) {
+      ViewGroup g = (ViewGroup) v;
+      for (int i = 0; i < g.getChildCount(); i++) { WebView w = findWeb(g.getChildAt(i)); if (w != null) return w; }
+    }
+    return null;
+  }
+  /** Phone Back button: ask the page first (it closes the top screen, then goes to the first tab). Leave the app only when the page says so. */
+  void askPage() {
+    WebView w = findWeb(a.getWindow().getDecorView());
+    if (w == null) { leave(); return; }
+    w.evaluateJavascript("(function(){try{return window.zonBack?!!window.zonBack():false}catch(e){return true}})()",
+      r -> { if (!"true".equals(r)) leave(); });
+  }
+  void hookBack() {
+    if (hookedId == System.identityHashCode(a)) return;
+    hookedId = System.identityHashCode(a);
+    if (a instanceof ComponentActivity) {
+      final ComponentActivity act = (ComponentActivity) a;
+      act.getOnBackPressedDispatcher().addCallback(act, new OnBackPressedCallback(true) {
+        @Override public void handleOnBackPressed() { askPage(); }
+      });
+      return;
+    }
+    /* Plain Activity (no AndroidX dispatcher): Android 13+ uses the back-invoked callback, older versions use the key event on the WebView. */
+    if (Build.VERSION.SDK_INT >= 33) {
+      a.getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> askPage());
+    }
+    final Runnable key = () -> {
+      WebView w = findWeb(a.getWindow().getDecorView());
+      if (w != null) w.setOnKeyListener((v, k, e) -> {
+        if (k != KeyEvent.KEYCODE_BACK) return false;
+        if (e.getAction() == KeyEvent.ACTION_UP) askPage();
+        return true;
+      });
+    };
+    ui(key);
+    new Handler(Looper.getMainLooper()).postDelayed(key, 1500);
+  }
+  void leave() { if (a instanceof AodActivity) a.finishAndRemoveTask(); else a.finishAffinity(); }
   void ui(Runnable r) { new Handler(Looper.getMainLooper()).post(r); }
   void toast(String t) { ui(() -> Toast.makeText(c, t, Toast.LENGTH_LONG).show()); }
   void start(Intent i) { try { i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); c.startActivity(i); } catch (Exception e) { toast("Not available"); } }
