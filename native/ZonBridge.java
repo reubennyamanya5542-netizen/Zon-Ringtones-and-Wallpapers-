@@ -40,6 +40,18 @@ public class ZonBridge {
   @JavascriptInterface public void setAutoRotate(boolean on) {
     ui(() -> a.setRequestedOrientation(on ? android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR : android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
   }
+  @JavascriptInterface public void setBackground(boolean on) {
+    if (!on) { c.stopService(new Intent(c, AodService.class)); return; }
+    if (!Settings.canDrawOverlays(c)) {
+      ui(() -> start(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + c.getPackageName()))));
+      toast("Allow 'Display over other apps', then open Zon again"); return;
+    }
+    c.startForegroundService(new Intent(c, AodService.class));
+    PowerManager pm = (PowerManager) c.getSystemService(Context.POWER_SERVICE);
+    if (!pm.isIgnoringBatteryOptimizations(c.getPackageName()))
+      ui(() -> start(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + c.getPackageName()))));
+  }
+  @JavascriptInterface public void finishAod() { ui(() -> { if (a instanceof AodActivity) a.finishAndRemoveTask(); }); }
   @JavascriptInterface public void exitApp() { ui(() -> a.finishAffinity()); }
 
   String mime(String n) { String m = MimeTypeMap.getSingleton().getMimeTypeFromExtension(n.substring(n.lastIndexOf('.') + 1).toLowerCase()); return m != null ? m : "application/octet-stream"; }
