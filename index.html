@@ -346,7 +346,6 @@ input,textarea{-webkit-user-select:text;user-select:text}
   </div>
   <div class="tabs" id="tabs"></div>
   <main id="main"></main>
-  <div class="ad" id="adBanner">Ad banner space (AdMob)</div>
   <nav id="nav"></nav>
 
   <div class="view" id="view"></div>
@@ -360,7 +359,7 @@ input,textarea{-webkit-user-select:text;user-select:text}
 <div id="mp"><div class="mpc"><div class="grab" onclick="closeMP()"></div><div class="mpart"></div>
 <div class="mpt"><b id="mpTi">Nothing playing</b><span id="mpAr"></span></div>
 <div class="mps" onclick="mpSeek(event)"><i id="mpbar"></i></div><div class="mptm"><span id="mpa"></span><span id="mpb"></span></div>
-<div class="mpctl"><svg viewBox="0 0 24 24"><path d="M11 6v12L2 12zM22 6v12l-9-6z"/></svg><span class="pp" onclick="mpPlay()"><svg id="mpp" viewBox="0 0 24 24"></svg></span><svg viewBox="0 0 24 24"><path d="M13 6v12l9-6zM2 6v12l9-6z"/></svg></div>
+<div class="mpctl"><svg viewBox="0 0 24 24" onclick="native('skipPrev')"><path d="M11 6v12L2 12zM22 6v12l-9-6z"/></svg><span class="pp" onclick="mpPlay()"><svg id="mpp" viewBox="0 0 24 24"></svg></span><svg viewBox="0 0 24 24" onclick="native('skipNext')"><path d="M13 6v12l9-6zM2 6v12l9-6z"/></svg></div>
 <div class="mpvol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/></svg><input type="range" value="70"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9zM15 8a5 5 0 010 8M17.5 5a9 9 0 010 14" style="stroke:#fff9;stroke-width:2;fill:#fff9"/></svg></div>
 <div class="mpft"><svg viewBox="0 0 24 24"><path d="M4 17h16M7 13h10M10 9h4"/></svg><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="3"/><path d="M6 20l6-6 6 6z"/></svg><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div></div></div>
 <div id="pickbg" onclick="closePick()"></div><div id="pick"></div>
@@ -395,6 +394,9 @@ const LOGO_SVG=`<svg viewBox="0 0 100 100"><defs><linearGradient id="lg" x1="0" 
 function logoEl(){return `<img src="${LOGO_FILE}" alt="" onerror="this.outerHTML=LOGO_SVG">`}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2400)}
 const native=(fn,...a)=>{if(window.ZonNative&&ZonNative[fn]){ZonNative[fn](...a);return true}return false};
+const hasNA=()=>{try{return !window.ZonNative||!ZonNative.hasNotifAccess||!!ZonNative.hasNotifAccess()}catch(e){return true}};
+const syncNative=()=>{try{window.ZonNative&&ZonNative.syncNotifs&&ZonNative.syncNotifs()}catch(e){}};
+function askNA(){$('dlg').innerHTML=`<h3 style="margin:0 0 .25rem">Allow notification access</h3><p style="color:var(--mut);margin:0 0 .5rem;font-size:.875rem">Zon shows your notifications and music controls on the always-on display. Android needs you to switch this on once. Everything stays on your phone and is never uploaded.</p><button class="act" onclick="closeSheet();native('openNotifAccess')">Open settings</button><button class="btn ghost" onclick="closeSheet()">Not now</button>`;$('sbg').classList.add('show');$('dlg').classList.add('show')}
 let ac;function tone(freqs,dur=1.2){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const n=ac.currentTime;freqs.forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain(),s=n+i*dur/freqs.length,e=n+(i+1)*dur/freqs.length;o.frequency.value=f;g.gain.setValueAtTime(.0001,s);g.gain.exponentialRampToValueAtTime(.25,s+.03);g.gain.exponentialRampToValueAtTime(.0001,e);o.connect(g).connect(ac.destination);o.start(s);o.stop(e+.05)})}catch(e){}}
 
 /* ---------- State ---------- */
@@ -604,7 +606,7 @@ function preciseL(){if(window.ZonNative&&ZonNative.batteryPrecise){const v=+ZonN
  return Math.min(100,Math.max(0,batt.c?L-.5+f:L+.5-f))/100}
 function kick(){if($('aod').classList.contains('show'))tick();if($('studio').classList.contains('show'))refreshPv()}
 if(navigator.getBattery)navigator.getBattery().then(b=>{const u=()=>onBatt(b);u();b.onlevelchange=u;b.onchargingchange=u;b.onchargingtimechange=u});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)kick()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){kick();syncNative()}});
 
 function timeParts(d){let h=d.getHours();if(!AO.h24)h=h%12||12;return[pad(h),pad(d.getMinutes()),pad(d.getSeconds()),h]}
 const WN=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','quarter','sixteen','seventeen','eighteen','nineteen','twenty','twenty one','twenty two','twenty three','twenty four','twenty five','twenty six','twenty seven','twenty eight','twenty nine'],WH=['Twelve','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven'];
@@ -797,7 +799,7 @@ function openStudio(){$('studio').classList.add('show');drawStudio();clearTimeou
 function closeStudio(){$('studio').classList.remove('show');clearTimeout(studioT)}
 function refreshPv(){const e=$('pvAod');if(e)paintAod(e,AO.tsize*.36*((e.clientWidth||122)/122),false,AO.sim)}
 function setAO(k,v){AO[k]=v;saveAO();refreshPv()}
-function tg(k){AO[k]=!AO[k];saveAO();if(k=='bg'&&!native('setBackground',!!AO.bg))toast('Works only in the installed app');drawStudio()}
+function tg(k){AO[k]=!AO[k];saveAO();if((k=='notif'||k=='media')&&AO[k]&&!hasNA())askNA();if(k=='bg'&&!native('setBackground',!!AO.bg))toast('Works only in the installed app');drawStudio()}
 function pick(k,v){AO[k]=v;saveAO();drawStudio()}
 function usePreset(n){const p=n=='Mine'?JSON.parse(localStorage.getItem('zonAodMine')||'{}'):PRESETS[n];Object.assign(AO,p);saveAO();drawStudio()}
 function saveMine(){try{localStorage.setItem('zonAodMine',JSON.stringify(AO));try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}toast('\u2713 Saved as My preset');drawStudio()}catch(e){toast('Could not save preset')}}
@@ -854,7 +856,7 @@ function drawStudio(){const sc=$('studio').scrollTop,sbE=document.querySelector(
 applyTheme();
 ['splashLogo','consentLogo','topLogo'].forEach(i=>$(i).innerHTML=logoEl());
 if(AOD_MODE){$('splash').style.display='none';$('consent').style.display='none';startAod()}else{setTimeout(()=>{$('splash').classList.add('out');if(S.consent!==POLICY_VERSION)$('consent').style.display='flex'},1700);if(AO.bg)native('setBackground',true)}
-loadCatalog();
+loadCatalog();syncNative();setTimeout(()=>{if((AO.notif||AO.media)&&!hasNA()&&!sessionStorage.getItem('naAsked')){sessionStorage.setItem('naAsked','1');askNA()}},2500);
 addEventListener('resize',()=>{if($('aod').classList.contains('show'))tick();refreshPv()});
 </script>
 </body>
