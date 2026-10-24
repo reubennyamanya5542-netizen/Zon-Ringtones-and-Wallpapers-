@@ -355,6 +355,39 @@ svg.i .duo{fill-rule:evenodd}
 input,textarea{-webkit-user-select:text;user-select:text}
 #aod,#aod *{-webkit-user-select:none;user-select:none}
 @media (min-width:360px) and (max-width:1099px) and (orientation:portrait){.grid{grid-template-columns:repeat(auto-fill,minmax(max(6rem,22%),1fr))}}
+
+/* ===== Wallpaper pager (swipe left/right) + sharp full-resolution image ===== */
+.view .bar,.view .acts{pointer-events:none}.view .bar>*,.view .acts>*{pointer-events:auto}
+.wpg{width:100%;height:100%;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.wpg::-webkit-scrollbar{display:none}
+.wsl{flex:0 0 100%;height:100%;position:relative;scroll-snap-align:center;scroll-snap-stop:always;background:#000}
+.wsl .art img.hi{position:absolute;inset:0;opacity:0;transition:opacity .35s}
+.wsl .art img.hi.ok{opacity:1}
+/* ===== Wallpaper crop editor ===== */
+.wedit{position:absolute;inset:0;z-index:140;background:#000;display:none}
+.wedit.show{display:block}
+.wfr{position:absolute;inset:0;overflow:auto;scrollbar-width:none;overscroll-behavior:contain;background-size:cover;background-position:center}
+.wfr::-webkit-scrollbar{display:none}
+.wfr img{display:block;max-width:none;max-height:none;-webkit-user-drag:none;pointer-events:none}
+.wgrid{position:absolute;inset:0;pointer-events:none;background:linear-gradient(#fff3,#fff3) 33.33% 0/1px 100% no-repeat,linear-gradient(#fff3,#fff3) 66.66% 0/1px 100% no-repeat,linear-gradient(#fff3,#fff3) 0 33.33%/100% 1px no-repeat,linear-gradient(#fff3,#fff3) 0 66.66%/100% 1px no-repeat}
+.wtop{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:calc(env(safe-area-inset-top) + .625rem) .625rem .375rem;z-index:2;pointer-events:none}
+.wtop>*{pointer-events:auto}
+.whint{white-space:nowrap;background:#000a;color:#fff;font-size:.78rem;padding:.4rem .8rem;border-radius:6.188rem;transition:opacity .5s;text-align:center;pointer-events:none!important}
+.whint.off{opacity:0}
+.wbot{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:1.4rem 1.1rem calc(env(safe-area-inset-bottom) + 1.1rem);background:linear-gradient(transparent,#000d);display:flex;flex-direction:column;gap:.8rem;align-items:center}
+.wbot .btn{max-width:16rem}
+.wz{display:flex;align-items:center;gap:.7rem;width:100%;max-width:22rem;color:#fff;font-size:.8rem}
+/* ===== Pull down to refresh: cards turn into blurry, blinking light (no spinner) ===== */
+main{overscroll-behavior-y:contain}
+main.skel .art img,main.skel .heart,main.skel .saved,main.skel .card .lab,main.skel .cov .pl{opacity:0!important}
+main.skel .art{background:color-mix(in srgb,var(--txt) 14%,var(--card))!important}
+main.skel .card,main.skel .item .cov{animation:skb 1s ease-in-out infinite alternate}
+main.skel .card::after,main.skel .item .cov::after{content:"";position:absolute;inset:0;z-index:3;background:linear-gradient(105deg,#fff0 25%,#ffffff55 50%,#fff0 75%);transform:translateX(-100%);animation:sks 1.2s ease-in-out infinite}
+main.skel .item .t{filter:blur(.3rem);opacity:.5}
+@keyframes skb{from{filter:blur(.1rem) brightness(.75);opacity:.55}to{filter:blur(.35rem) brightness(1.2);opacity:1}}
+@keyframes sks{to{transform:translateX(100%)}}
+main.fin{animation:fin .35s ease}
+@keyframes fin{from{opacity:0}}
 </style>
 </head>
 <body>
@@ -386,6 +419,7 @@ input,textarea{-webkit-user-select:text;user-select:text}
   <nav id="nav"></nav>
 
   <div class="view" id="view"></div>
+  <div class="wedit" id="wedit"></div>
   <div class="sheet-bg" id="sbg" onclick="closeSheet()"></div>
   <div class="sheet" id="sheet"></div>
   <div class="dlg" id="dlg"></div>
@@ -496,7 +530,7 @@ function go(t){if(t=='aod'){openStudio();return}tab=t;render()}
 function setKind(k){kind=k;chip='All';render()}
 function heartBtn(it){return `<button class="heart ${S.fav.includes(it.id)?'on':''}" onclick="event.stopPropagation();toggleFav('${it.id}')">${ic(I.heart)}</button>`}
 function savedBadge(it){return S.dl.includes(it.id)?`<span class="saved">${ic(I.check)}</span>`:''}
-function wcard(it,cls){return `<div class="card ${cls}" onclick="wallView('${it.id}')">${art(it)}${savedBadge(it)}${heartBtn(it)}</div>`}
+function wcard(it,cls,ctx){return `<div class="card ${cls}" onclick="wallView('${it.id}','${ctx||''}')">${art(it)}${savedBadge(it)}${heartBtn(it)}</div>`}
 function arow(it,mode){return `<div class="item"><div class="cov" style="background:${it.g}" onclick="playItem(ALL['${it.id}'])">${art(it)}<span class="pl">${ic(I.play)}</span></div>
  <div class="t" onclick="${mode=='vault'?`sheet('${it.id}')`:`audioView('${it.id}')`}"><b>${it.title}</b><small>${it.cat}${it.dur?' · '+it.dur:''}</small></div>
  ${mode=='vault'?`<button class="ib" onclick="sheet('${it.id}')">${ic(I.more)}</button>`:`<button class="ib ${S.fav.includes(it.id)?'on':''}" onclick="toggleFav('${it.id}')">${ic(I.heart)}</button><button class="ib ${S.dl.includes(it.id)?'ok':''}" onclick="download('${it.id}')">${ic(S.dl.includes(it.id)?I.check:I.dl)}</button>`}</div>`}
@@ -507,26 +541,26 @@ function explore(){
  const base=kind=='a'?CAT.a:CAT.w,q=Q.trim().toLowerCase();
  let list=base.filter(x=>(chip=='All'||x.cat==chip)&&(!q||(x.type=='a'&&x.title.toLowerCase().includes(q))||x.cat.toLowerCase().includes(q)));
  if(sortNew)list=[...list].reverse();
- let h='';
+ WL.list=list.map(x=>x.id);let h='';
  if(kind=='w'&&!q&&chip=='All'&&!sortNew){
   h+=`<div class="quick">
    <button onclick="chip='All';sortNew=false;explore()"><span>${ic(I.star)}</span>Popular</button>
    <button onclick="sortNew=true;explore()"><span>${ic(I.new)}</span>Newest</button>
    <button onclick="chip='AMOLED';explore()"><span>${ic(I.moon)}</span>AMOLED</button>
    <button onclick="go('fav')"><span>${ic(I.heart)}</span>Favorites</button></div>`;
-  if(CAT.feat.length)h+=`<h3 class="sec">Featured</h3><div class="hs">${CAT.feat.map(x=>wcard(x,'f')).join('')}</div>`;
+  if(CAT.feat.length)h+=`<h3 class="sec">Featured</h3><div class="hs">${CAT.feat.map(x=>wcard(x,'f','feat')).join('')}</div>`;
   if(CAT.cols.length)h+=`<h3 class="sec">Popular Collections</h3><div class="hs">${CAT.cols.map(c=>`<div class="card c" style="--b:${c.color}" onclick="chip='${c.name}';explore()">${art(c.items[0])}<div class="lab">${c.name}</div></div>`).join('')}</div>`;
   h+=`<h3 class="sec">Popular</h3>`}
  else{h+=chipsHTML(base);if(sortNew)h+=`<h3 class="sec" style="margin-top:0">Newest <button class="link" style="font-size:0.8125rem" onclick="sortNew=false;explore()">Clear</button></h3>`}
- h+=list.length?(kind=='a'?`<div class="alist">${list.map(x=>arow(x,'explore')).join('')}</div>`:`<div class="grid">${list.map(x=>wcard(x,'')).join('')}</div>`):`<div class="empty">Nothing found.</div>`;
- if(kind=='w'&&!q&&chip=='All'&&base.length)h+=`<h3 class="sec">WhatsApp DPs &amp; contact avatars</h3><div class="hs">${base.slice(0,8).map(it=>`<div class="card f" style="width:6.875rem;height:6.875rem" onclick="wallView('${it.id}')">${art(it)}</div>`).join('')}</div>`;
+ h+=list.length?(kind=='a'?`<div class="alist">${list.map(x=>arow(x,'explore')).join('')}</div>`:`<div class="grid">${list.map(x=>wcard(x,'','list')).join('')}</div>`):`<div class="empty">Nothing found.</div>`;
+ if(kind=='w'&&!q&&chip=='All'&&base.length)h+=`<h3 class="sec">WhatsApp DPs &amp; contact avatars</h3><div class="hs">${base.slice(0,8).map(it=>`<div class="card f" style="width:6.875rem;height:6.875rem" onclick="wallView('${it.id}','dp')">${art(it)}</div>`).join('')}</div>`;
  $('main').innerHTML=h;hydrate($('main'))}
 function seg2(cur,a,b,fn){return `<div class="chips" style="margin-bottom:0.375rem"><button class="chip ${cur=='a'?'on':''}" onclick="${fn}('a')">${a}</button><button class="chip ${cur=='w'?'on':''}" onclick="${fn}('w')">${b}</button></div>`}
 function vault(){const ids=S.dl.map(id=>ALL[id]||S.meta[id]).filter(x=>x&&x.type==vkind);
  $('main').innerHTML=`<h2 style="margin:0.375rem 0.125rem 0.625rem">Offline Vault</h2>`+seg2(vkind,'Saved Audio','Saved Wallpapers','setV')+(ids.length?(vkind=='a'?`<div class="alist">${ids.map(x=>arow(x,'vault')).join('')}</div>`:`<div class="grid">${ids.map(x=>`<div class="card" onclick="sheet('${x.id}')">${art(x)}</div>`).join('')}</div>`):`<div class="empty">Your vault is empty.<br>Download items from Explore to keep them offline.</div>`);hydrate($('main'))}
 function setV(k){vkind=k;vault()}
 function fav(){const ids=S.fav.map(id=>ALL[id]||S.meta[id]).filter(x=>x&&!S.dl.includes(x.id));const a=ids.filter(x=>x.type=='a'),w=ids.filter(x=>x.type=='w');
- $('main').innerHTML=`<h2 style="margin:0.375rem 0.125rem 0.625rem">Favorites</h2>`+(ids.length?(a.length?`<div class="alist">${a.map(x=>arow(x,'explore')).join('')}</div>`:'')+(w.length?`<div class="grid">${w.map(x=>wcard(x,'')).join('')}</div>`:''):`<div class="empty">Items you like but haven't downloaded yet appear here.</div>`);hydrate($('main'))}
+ $('main').innerHTML=`<h2 style="margin:0.375rem 0.125rem 0.625rem">Favorites</h2>`+(ids.length?(a.length?`<div class="alist">${a.map(x=>arow(x,'explore')).join('')}</div>`:'')+(w.length?`<div class="grid">${w.map(x=>wcard(x,'','fav')).join('')}</div>`:''):`<div class="empty">Items you like but haven't downloaded yet appear here.</div>`);hydrate($('main'))}
 function cacheMB(){return (Object.values(S.size).reduce((a,b)=>a+b,0)/1048576).toFixed(1)}
 function set(){const tn={dark:'Dark',light:'Light',system:'System Default'}[S.theme]||'Dark';
  $('main').innerHTML=`<div class="narrow"><h2 style="margin:0.375rem 0.125rem 0.25rem">Settings</h2>
@@ -557,13 +591,61 @@ async function clearCache(){try{window.caches&&await caches.delete('zon')}catch(
 
 /* ---------- Detail views ---------- */
 function closeView(){$('view').classList.remove('show');stopAudio()}
-function wallView(id){const it=ALL[id];$('view').dataset.k='w';
- $('view').innerHTML=`<div class="bar"><button class="ib" style="background:#0008;color:#fff" onclick="closeView()">${ic(I.back)}</button><button class="ib" style="background:#0008;color:#fff" onclick="shareIt('${id}')">${ic(I.share)}</button></div>
- <div class="pv" style="position:absolute;inset:0;max-width:none">${art(it)}</div><div style="flex:1"></div>
- <div class="acts" style="background:linear-gradient(transparent,#000d)"><button class="ib ${S.fav.includes(id)?'on':''}" style="background:#0008;color:#fff" onclick="toggleFav('${id}');wallView('${id}')">${ic(I.heart)}</button>
- <button class="btn big" onclick="wallDialog('${id}')">Apply</button>
- <button class="ib ${S.dl.includes(id)?'ok':''}" style="background:#0008;color:#fff" onclick="download('${id}').then(()=>wallView('${id}'))">${ic(S.dl.includes(id)?I.check:I.dl)}</button></div>`;
- $('view').classList.add('show');hydrate($('view'))}
+const WL={list:[]};let WV={list:[],i:0};
+const WCTX={feat:()=>CAT.feat,list:()=>WL.list.map(i=>ALL[i]),dp:()=>CAT.w.slice(0,8),fav:()=>S.fav.map(i=>ALL[i]||S.meta[i]).filter(x=>x&&x.type=='w'&&!S.dl.includes(x.id))};
+const wvId=()=>WV.list[WV.i];
+function wallView(id,ctx){const it=ALL[id]||S.meta[id];if(!it)return;
+ let L=[];try{L=((WCTX[ctx]&&WCTX[ctx]())||[]).filter(Boolean).map(x=>x.id)}catch(e){}
+ if(!L.includes(id))L=[id];WV={list:L,i:L.indexOf(id)};$('view').dataset.k='w';
+ $('view').innerHTML=`<div class="bar"><button class="ib" style="background:#0008;color:#fff" onclick="closeView()">${ic(I.back)}</button><button class="ib" style="background:#0008;color:#fff" onclick="shareIt(wvId())">${ic(I.share)}</button></div>
+ <div class="pv" style="position:absolute;inset:0;max-width:none"><div class="wpg" id="wpg">${L.map(()=>'<div class="wsl"></div>').join('')}</div></div><div style="flex:1"></div>
+ <div class="acts" id="wacts" style="background:linear-gradient(transparent,#000d)"></div>`;
+ $('view').classList.add('show');const pg=$('wpg');pg.scrollLeft=WV.i*pg.clientWidth;wvSync();wvFill();
+ let t;pg.addEventListener('scroll',()=>{clearTimeout(t);t=setTimeout(()=>{const w=pg.clientWidth||1,i=Math.max(0,Math.min(L.length-1,Math.round(pg.scrollLeft/w)));if(i!==WV.i){WV.i=i;wvSync();wvFill()}},70)},{passive:true})}
+function wvSync(){const id=wvId();if(!id||!$('wacts'))return;
+ $('wacts').innerHTML=`<button class="ib ${S.fav.includes(id)?'on':''}" style="background:#0008;color:#fff" onclick="toggleFav(wvId());wvSync()">${ic(I.heart)}</button>
+ <button class="btn big" onclick="openWE(wvId())">Apply</button>
+ <button class="ib ${S.dl.includes(id)?'ok':''}" style="background:#0008;color:#fff" onclick="download(wvId()).then(wvSync)">${ic(S.dl.includes(id)?I.check:I.dl)}</button>`}
+/* the picture on screen and its neighbours load the real file (sharp); the small preview shows first */
+function wvFill(){const i=WV.i;document.querySelectorAll('#wpg .wsl').forEach((el,j)=>{const d=Math.abs(j-i);
+ if(d<=1){if(!el.dataset.l){el.dataset.l=1;const it=ALL[WV.list[j]]||S.meta[WV.list[j]];if(!it)return;el.innerHTML=art(it);hydrate(el);
+  if(it.url){const hi=new Image();hi.className='hi';hi.decoding='async';hi.alt='';srcOf(it.url).then(u=>{hi.onload=()=>hi.classList.add('ok');hi.src=u});el.firstChild.appendChild(hi)}}}
+ else if(d>2&&el.dataset.l){el.dataset.l='';el.innerHTML=''}})}
+
+/* ---------- Wallpaper editor: scroll left/right (or zoom) to choose the part you want ---------- */
+let WE={open:false};
+async function openWE(id){const it=ALL[id]||S.meta[id];if(!it)return;closeSheet();
+ WE={open:true,id,img:null,z:1,taint:false,s0:1};
+ const el=$('wedit');
+ el.innerHTML=`<div class="wfr" id="wfr"></div><div class="wgrid"></div>
+ <div class="wtop"><button class="ib" style="background:#0008;color:#fff" onclick="closeWE()">${ic(I.back)}</button><span class="whint" id="whint">Scroll left or right</span><button class="ib" style="background:#0008;color:#fff;width:auto;padding:0 .9rem;border-radius:6.188rem;font-size:.85rem" onclick="weReset()">Reset</button></div>
+ <div class="wbot"><div class="wz"><span>Zoom</span><input type="range" id="wzr" min="100" max="300" value="100" oninput="weZoom(+this.value/100)"></div><button class="btn" onclick="wallDialog('${id}')">Set wallpaper</button></div>`;
+ el.classList.add('show');
+ const fr=$('wfr');if(it.thumb)fr.style.backgroundImage=`url("${it.thumb}")`;
+ const img=new Image();img.draggable=false;img.decoding='async';
+ const src=await srcOf(it.url||it.thumb);
+ await new Promise(res=>{img.onload=res;img.onerror=()=>{if(img.crossOrigin){img.crossOrigin=null;WE.taint=true;img.src=src}else res()};img.crossOrigin='anonymous';img.src=src});
+ if(!WE.open||WE.id!==id)return;
+ if(!img.naturalWidth){toast('Could not load this wallpaper');closeWE();return}
+ WE.img=img;fr.style.backgroundImage='none';fr.appendChild(img);weLayout(true);
+ setTimeout(()=>{const h=$('whint');if(h)h.classList.add('off')},3200)}
+function weLayout(init){const fr=$('wfr'),img=WE.img;if(!fr||!img)return;
+ const W=fr.clientWidth,H=fr.clientHeight,iw=img.naturalWidth,ih=img.naturalHeight;
+ let cx=.5,cy=.5;if(!init&&img.width&&img.height){cx=(fr.scrollLeft+W/2)/img.width;cy=(fr.scrollTop+H/2)/img.height}
+ WE.s0=Math.max(W/iw,H/ih);const sc=WE.s0*WE.z;
+ img.style.width=iw*sc+'px';img.style.height=ih*sc+'px';
+ fr.scrollLeft=cx*iw*sc-W/2;fr.scrollTop=cy*ih*sc-H/2}
+function weZoom(z){WE.z=z;weLayout(false)}
+function weReset(){WE.z=1;const r=$('wzr');if(r)r.value=100;weLayout(true)}
+function closeWE(){$('wedit').classList.remove('show');$('wedit').innerHTML='';WE={open:false}}
+/* returns the chosen part as a JPEG (base64), or '' if it cannot be cut here */
+function weCrop(){const fr=$('wfr'),img=WE.img;if(!fr||!img||WE.taint)return '';
+ const sc=WE.s0*WE.z,W=fr.clientWidth,H=fr.clientHeight,iw=img.naturalWidth,ih=img.naturalHeight;
+ let sw=Math.min(W/sc,iw),sh=Math.min(H/sc,ih),sx=Math.max(0,Math.min(fr.scrollLeft/sc,iw-sw)),sy=Math.max(0,Math.min(fr.scrollTop/sc,ih-sh));
+ const k=Math.min(1,4096/Math.max(sw,sh)),cw=Math.round(sw*k),ch=Math.round(sh*k),c=document.createElement('canvas');c.width=cw;c.height=ch;
+ try{c.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,cw,ch);return c.toDataURL('image/jpeg',.95).split(',')[1]||''}catch(e){return ''}}
+addEventListener('resize',()=>{if(WE.open)weLayout(false)});
+
 let tS=0,tE=100,trimId='';
 function audioView(id){const it=ALL[id];tS=0;tE=100;trimId=id;
  const draw=()=>{const bars=[...Array(44)].map((_,i)=>{const p=i*100/44;return `<i class="${p>=tS&&p<=tE?'in':''}" style="height:${25+Math.abs(Math.sin(i*1.3)*Math.cos(i*.4))*75}%"></i>`}).join('');
@@ -595,7 +677,7 @@ function sheet(id){const it=ALL[id]||S.meta[id],a=it.type=='a';
   <button class="act" onclick="applyAudio('${id}','Notification sound')">${ic(I.bell)}Set as Notification sound</button>
   <button class="act" onclick="applyAudio('${id}','Alarm tone')">${ic(I.alarm)}Set as Alarm tone</button>
   <button class="act" onclick="closeSheet();audioView('${id}')">${ic(I.trim)}Trim audio</button>`:
- `<button class="act" onclick="wallDialog('${id}')">${ic(I.img)}Apply wallpaper</button>`)+
+ `<button class="act" onclick="openWE('${id}')">${ic(I.img)}Apply wallpaper</button>`)+
  `<button class="act" onclick="closeSheet();shareIt('${id}')">${ic(I.share)}Share</button>`+
  `<button class="act" onclick="exportIt('${id}')">${ic(I.exp)}Export to ${a?'storage':'Gallery'}</button>`+
  (S.dl.includes(id)?`<button class="act del" onclick="removeIt('${id}')">${ic(I.trash)}Delete from vault</button>`:'');
@@ -616,8 +698,11 @@ function wallDialog(id){$('sheet').classList.remove('show');
  $('dlg').innerHTML=`<h3 style="margin:0 0 0.25rem">Apply wallpaper</h3><p style="color:var(--mut);margin:0 0 0.5rem;font-size:0.875rem">Where should it go?</p>
  ${['Home Screen','Lock Screen','Both'].map(w=>`<button class="act" onclick="applyWall('${id}','${w}')">${w}</button>`).join('')}<button class="btn ghost" onclick="closeSheet()">Cancel</button>`;
  $('sbg').classList.add('show');$('dlg').classList.add('show')}
-async function applyWall(id,where){closeSheet();const it=ALL[id]||S.meta[id];if(!hasNative('setWallpaper')){toast('Wallpaper set on '+where);return}
- const b=await vaultB64(id);ZonNative.setWallpaper(id,where,(it&&it.url)||'',b);toast('Setting wallpaper...')}
+async function applyWall(id,where){closeSheet();const it=ALL[id]||S.meta[id];
+ if(!hasNative('setWallpaper')){toast('Wallpaper set on '+where);closeWE();return}
+ let b='';if(WE.open&&WE.id==id)b=weCrop();
+ if(!b)b=await vaultB64(id);
+ ZonNative.setWallpaper(id,where,(it&&it.url)||'',b);toast('Setting wallpaper...');closeWE()}
 
 /* ---------- About / legal ---------- */
 const SUBS={
@@ -975,6 +1060,7 @@ function zonBack(){
  if(on('pick')){closePick();return true}
  if(on('aod')){stopAod();return true}
  if(on('dlg')||on('sheet')){closeSheet();return true}
+ if(on('wedit')){closeWE();return true}
  if(on('sub')){$('sub').classList.remove('show');return true}
  if(on('studio')){closeStudio();return true}
  if(on('view')){closeView();return true}
@@ -984,7 +1070,26 @@ function zonBack(){
  exitArm=Date.now()+2000;toast('Press back again to exit');return true}
 window.zonBack=zonBack;
 try{history.replaceState({zon:0},'');history.pushState({zon:1},'');
- addEventListener('popstate',()=>{if(zonBack())history.pushState({zon:1},'');else if(!native('exitApp'))history.back()})}catch(e){}
+ /* keep one history step ahead: after a real tap Android keeps the step, so Back always reaches zonBack() first */
+ const arm=()=>{try{if(!(history.state&&history.state.zon===1))history.pushState({zon:1},'')}catch(e){}};
+ addEventListener('pointerup',arm,true);addEventListener('touchend',arm,true);
+ addEventListener('popstate',()=>{if(zonBack())arm();else if(!native('exitApp'))history.back()})}catch(e){}
+try{const A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.addListener)A.addListener('backButton',()=>{if(!zonBack()&&!native('exitApp')&&A.exitApp)A.exitApp()})}catch(e){}
+
+
+/* ---------- Pull down to refresh (cards blink as blurry light, no spinner) ---------- */
+let RF=0;
+async function refreshAll(){if(RF)return;RF=1;const m=$('main'),t0=Date.now(),base=CATALOG_URL.replace(/[^/]*$/,'');m.classList.add('skel');let data=null;
+ try{const r=await fetch(CATALOG_URL+(CATALOG_URL.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;data=await r.json();try{localStorage.setItem('zonCat',JSON.stringify({d:data,b:base}))}catch(e){}}catch(e){data=null}
+ setTimeout(()=>{if(data)build(data,base);else render();m.classList.remove('skel');m.classList.add('fin');setTimeout(()=>m.classList.remove('fin'),450);if(!data)toast('Could not refresh. Check your connection.');RF=0},Math.max(0,1000-(Date.now()-t0)))}
+(function(){const m=$('main'),TH=70;let y0=0,x0=0,pull=0,act=false;
+ m.addEventListener('touchstart',e=>{act=false;pull=0;if(RF||tab=='set'||m.scrollTop>0||e.touches.length>1)return;y0=e.touches[0].clientY;x0=e.touches[0].clientX;act=true},{passive:true});
+ m.addEventListener('touchmove',e=>{if(!act)return;const t=e.touches[0],dy=t.clientY-y0,dx=t.clientX-x0;
+  if(m.scrollTop>0||Math.abs(dx)>Math.abs(dy)*1.2){if(pull)end();act=false;return}
+  if(dy<=0)return;
+  pull=Math.min(dy,200);m.style.transition='none';m.style.transform=`translateY(${pull*.4}px)`;m.classList.toggle('skel',pull>=TH);if(e.cancelable)e.preventDefault()},{passive:false});
+ function end(){const go=pull>=TH;act=false;pull=0;m.style.transition='transform .25s';m.style.transform='';if(go)refreshAll();else if(!RF)m.classList.remove('skel')}
+ m.addEventListener('touchend',()=>{if(act||pull)end()});m.addEventListener('touchcancel',()=>{if(act||pull)end()})})();
 
 /* ---------- Boot ---------- */
 applyTheme();
