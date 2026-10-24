@@ -41,7 +41,9 @@ jobs:
           elif [ -f debug.keystore ]; then cp debug.keystore ~/.android/debug.keystore; echo "Signing with debug.keystore from the repo"
           else echo "::warning::No signing key found. This build gets a random key and will not install over an older Zon. Add the DEBUG_KEYSTORE_B64 secret."; fi
       - name: Raise the version number every build
-        run: sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/" android/app/build.gradle
+        run: |
+          sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/" android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "20.34.12"/' android/app/build.gradle
       - name: Build
         working-directory: android
         run: chmod +x gradlew && ./gradlew assembleDebug
