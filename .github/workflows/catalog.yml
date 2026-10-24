@@ -38,24 +38,31 @@ jobs:
           def title(p):
               t = os.path.splitext(os.path.basename(p))[0]
               return re.sub(r'[-_]+', ' ', t).strip().title()
+          def pretty(p, cat, n):
+              # file names that are just a random code get a friendly title: "Cars 1", "Cars 2"...
+              stem = os.path.splitext(os.path.basename(p))[0]
+              return f'{cat} {n}' if re.fullmatch(r'(?=.*\d)[0-9A-Za-z]{14,}', stem) else title(p)
           def slug(*a):
               return re.sub(r'[^a-z0-9]+', '-', '-'.join(a).lower()).strip('-')
           audio, walls = [], []
+          cnt = {}
           for _, p, cat in scan('audio', AUD):
+              cnt[('a', cat)] = cnt.get(('a', cat), 0) + 1
               dur = ''
               try:
                   s = int(MF(p).info.length); dur = f'{s//60}:{s%60:02d}'
               except Exception: pass
               base = os.path.splitext(p)[0]
               cover = next((base + e for e in IMG if os.path.exists(base + e)), '')
-              audio.append({'id': slug(cat, title(p)), 'title': title(p), 'category': cat, 'duration': dur, 'url': p, 'cover': cover})
+              audio.append({'id': slug(cat, title(p)), 'title': pretty(p, cat, cnt[('a', cat)]), 'category': cat, 'duration': dur, 'url': p, 'cover': cover})
           os.makedirs('thumbs', exist_ok=True)
           for _, p, cat in scan('wallpapers', IMG):
+              cnt[('w', cat)] = cnt.get(('w', cat), 0) + 1
               i = slug(cat, title(p)); th = f'thumbs/{i}.jpg'
               try:
-                  im = Image.open(p).convert('RGB'); im.thumbnail((400, 800)); im.save(th, quality=78)
+                  im = Image.open(p).convert('RGB'); im.thumbnail((640, 1280)); im.save(th, quality=84)
               except Exception: th = p
-              walls.append({'id': i, 'title': title(p), 'category': cat, 'thumb': th, 'url': p})
+              walls.append({'id': i, 'title': pretty(p, cat, cnt[('w', cat)]), 'category': cat, 'thumb': th, 'url': p})
           cat = {'audio': audio, 'wallpapers': walls}
           if os.path.exists('featured.json'): cat.update(json.load(open('featured.json')))
           json.dump(cat, open('catalog.json', 'w'), indent=1, ensure_ascii=False)
