@@ -1,0 +1,27 @@
+name: Make category folders
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  folders:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create folders from the category lists in index.html
+        run: |
+          python3 - <<'PY'
+          import re, os
+          s = open('index.html', encoding='utf-8').read()
+          for var, root in (('ACATS', 'audio'), ('WCATS', 'wallpapers')):
+              names = re.findall(r"'([^']+)'", re.search(var + r"=\[(.*?)\];", s, re.S).group(1))
+              for n in names:
+                  os.makedirs(f'{root}/{n}', exist_ok=True)
+                  open(f'{root}/{n}/.gitkeep', 'a').close()
+              print(root, len(names))
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add audio wallpapers
+          git diff --cached --quiet || (git commit -m "Add category folders" && git push)

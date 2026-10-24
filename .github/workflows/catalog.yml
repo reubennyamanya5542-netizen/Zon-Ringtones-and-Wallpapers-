@@ -1,0 +1,68 @@
+name: Build catalog
+on:
+  push:
+    paths: ['audio/**', 'wallpapers/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install mutagen pillow
+      - name: Generate catalog.json
+        run: |
+          python - <<'PY'
+          import os, re, json, subprocess
+          from mutagen import File as MF
+          from PIL import Image
+          AUD = ('.mp3', '.m4a', '.ogg', '.wav', '.aac', '.opus')
+          IMG = ('.jpg', '.jpeg', '.png', '.webp')
+          def born(p):
+              r = subprocess.run(['git','log','--diff-filter=A','--format=%ct','-1','--',p], capture_output=True, text=True).stdout.strip()
+              return int(r or 0)
+          def scan(root, exts):
+              out = []
+              for d, _, fs in os.walk(root):
+                  for f in fs:
+                      p = os.path.join(d, f).replace('\\', '/')
+                      if f.lower().endswith(exts):
+                          rel = os.path.relpath(d, root)
+                          cat = 'Trending' if rel == '.' else rel.split(os.sep)[0]
+                          out.append((born(p), p, cat))
+              return sorted(out)
+          def title(p):
+              t = os.path.splitext(os.path.basename(p))[0]
+              return re.sub(r'[-_]+', ' ', t).strip().title()
+          def slug(*a):
+              return re.sub(r'[^a-z0-9]+', '-', '-'.join(a).lower()).strip('-')
+          audio, walls = [], []
+          for _, p, cat in scan('audio', AUD):
+              dur = ''
+              try:
+                  s = int(MF(p).info.length); dur = f'{s//60}:{s%60:02d}'
+              except Exception: pass
+              base = os.path.splitext(p)[0]
+              cover = next((base + e for e in IMG if os.path.exists(base + e)), '')
+              audio.append({'id': slug(cat, title(p)), 'title': title(p), 'category': cat, 'duration': dur, 'url': p, 'cover': cover})
+          os.makedirs('thumbs', exist_ok=True)
+          for _, p, cat in scan('wallpapers', IMG):
+              i = slug(cat, title(p)); th = f'thumbs/{i}.jpg'
+              try:
+                  im = Image.open(p).convert('RGB'); im.thumbnail((400, 800)); im.save(th, quality=78)
+              except Exception: th = p
+              walls.append({'id': i, 'title': title(p), 'category': cat, 'thumb': th, 'url': p})
+          cat = {'audio': audio, 'wallpapers': walls}
+          if os.path.exists('featured.json'): cat.update(json.load(open('featured.json')))
+          json.dump(cat, open('catalog.json', 'w'), indent=1, ensure_ascii=False)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add catalog.json thumbs
+          git diff --cached --quiet || (git commit -m "Update catalog [skip ci]" && git push)
