@@ -28,6 +28,10 @@ jobs:
           python3 native/patch_manifest.py
           sed -i 's/minSdkVersion = .*/minSdkVersion = 29/' android/variables.gradle
           npx cap sync android
+      - name: App icon
+        run: |
+          pip install pillow
+          python3 native/make_icons.py android/app/src/main/res
       - name: Use the same signing key every build
         run: |
           if [ -f debug.keystore ]; then mkdir -p ~/.android && cp debug.keystore ~/.android/debug.keystore; else echo "No debug.keystore in the repo, so this build gets a random key"; fi
