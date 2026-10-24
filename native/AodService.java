@@ -7,6 +7,13 @@ public class AodService extends Service {
   boolean reg = false;
   final BroadcastReceiver r = new BroadcastReceiver() {
     @Override public void onReceive(Context c, Intent i) {
+      SharedPreferences p = c.getSharedPreferences("zon", 0);
+      if (p.getBoolean("sch_on", false)) {
+        java.util.Calendar k = java.util.Calendar.getInstance();
+        int m = k.get(java.util.Calendar.HOUR_OF_DAY) * 60 + k.get(java.util.Calendar.MINUTE), s = p.getInt("sch_s", 1320), e = p.getInt("sch_e", 360);
+        boolean inside = s <= e ? (m >= s && m < e) : (m >= s || m < e);
+        if (!inside) return;
+      }
       try { c.startActivity(new Intent(c, AodActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)); } catch (Exception e) {}
     }
   };
