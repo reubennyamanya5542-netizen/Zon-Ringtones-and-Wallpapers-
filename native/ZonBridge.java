@@ -52,6 +52,7 @@ public class ZonBridge {
       ui(() -> start(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + c.getPackageName()))));
   }
   @JavascriptInterface public void finishAod() { ui(() -> { if (a instanceof AodActivity) a.finishAndRemoveTask(); }); }
+  @JavascriptInterface public void immersive(boolean on) { ui(() -> MainActivity.immersive(a, on)); }
   @JavascriptInterface public void exitApp() { ui(() -> a.finishAffinity()); }
 
   String mime(String n) { String m = MimeTypeMap.getSingleton().getMimeTypeFromExtension(n.substring(n.lastIndexOf('.') + 1).toLowerCase()); return m != null ? m : "application/octet-stream"; }
