@@ -10,7 +10,11 @@
 :root.light{--bg:#F5F6FA;--card:#FFFFFF;--txt:#0B0F19;--mut:#6B7280;--line:#E5E7EB;--glass:#00000008}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{font-size:max(0.5rem,min(clamp(0.625rem,4.444vw,1rem),4.6vh))}
-@media (min-width:22.5rem){html{font-size:max(0.5rem,min(calc(1rem + (100vw - 22.5rem)*.0069),1.75rem,4.6vh))}}
+@media (min-width:1100px),(min-width:360px) and (orientation:landscape){html{font-size:max(0.5rem,min(calc(1rem + (100vw - 22.5rem)*.0069),1.75rem,4.6vh))}}
+/* Phone-style layout for any portrait screen 360px-1099px wide (covers 900dp and 960dp displays): scales like a normal phone */
+@media (min-width:360px) and (max-width:1099px) and (orientation:portrait){
+ html{font-size:max(0.5rem,min(calc(1rem + (100vw - 22.5rem)*.0125),1.55rem,4.6vh))}
+}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:system-ui,Roboto,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
 input,select{font:inherit}
@@ -163,7 +167,7 @@ input[type=range]{width:100%;accent-color:var(--pri)}
 .view[data-k=a]>*{width:100%;max-width:44rem;margin-left:auto;margin-right:auto}
 .sbar{gap:.5rem}.sbar b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .top .search{min-width:0}
-@media (min-width:760px),(orientation:landscape) and (max-height:560px){
+@media (min-width:1100px),(orientation:landscape) and (max-height:560px){
  #app{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"nav top" "nav tabs" "nav main" "nav ad"}
  #app>nav{flex-direction:column;justify-content:center;gap:.25rem;border-top:0;border-right:1px solid var(--line);width:5.25rem;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) env(safe-area-inset-left);overflow-y:auto}
  nav button{flex:none;padding:.5rem 0}
@@ -350,6 +354,7 @@ svg.i .duo{fill-rule:evenodd}
 *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 input,textarea{-webkit-user-select:text;user-select:text}
 #aod,#aod *{-webkit-user-select:none;user-select:none}
+@media (min-width:360px) and (max-width:1099px) and (orientation:portrait){.grid{grid-template-columns:repeat(auto-fill,minmax(max(6rem,22%),1fr))}}
 </style>
 </head>
 <body>
@@ -491,7 +496,7 @@ function go(t){if(t=='aod'){openStudio();return}tab=t;render()}
 function setKind(k){kind=k;chip='All';render()}
 function heartBtn(it){return `<button class="heart ${S.fav.includes(it.id)?'on':''}" onclick="event.stopPropagation();toggleFav('${it.id}')">${ic(I.heart)}</button>`}
 function savedBadge(it){return S.dl.includes(it.id)?`<span class="saved">${ic(I.check)}</span>`:''}
-function wcard(it,cls){return `<div class="card ${cls}" onclick="wallView('${it.id}')">${art(it)}${savedBadge(it)}${heartBtn(it)}<div class="lab">${it.title}</div></div>`}
+function wcard(it,cls){return `<div class="card ${cls}" onclick="wallView('${it.id}')">${art(it)}${savedBadge(it)}${heartBtn(it)}</div>`}
 function arow(it,mode){return `<div class="item"><div class="cov" style="background:${it.g}" onclick="playItem(ALL['${it.id}'])">${art(it)}<span class="pl">${ic(I.play)}</span></div>
  <div class="t" onclick="${mode=='vault'?`sheet('${it.id}')`:`audioView('${it.id}')`}"><b>${it.title}</b><small>${it.cat}${it.dur?' · '+it.dur:''}</small></div>
  ${mode=='vault'?`<button class="ib" onclick="sheet('${it.id}')">${ic(I.more)}</button>`:`<button class="ib ${S.fav.includes(it.id)?'on':''}" onclick="toggleFav('${it.id}')">${ic(I.heart)}</button><button class="ib ${S.dl.includes(it.id)?'ok':''}" onclick="download('${it.id}')">${ic(S.dl.includes(it.id)?I.check:I.dl)}</button>`}</div>`}
@@ -500,7 +505,7 @@ const ACATS=['Trending','Instrumental','Bollywood','Hip-Hop','Lo-fi','Phonk','ED
 function chipsHTML(list){const fixed=kind=='a'?ACATS:WCATS;const cs=['All',...new Set([...fixed,...list.map(x=>x.cat)])];return `<div class="chips">${cs.map(c=>`<button class="chip ${c==chip?'on':''}" onclick="chip='${c}';explore()">${c}</button>`).join('')}</div>`}
 function explore(){
  const base=kind=='a'?CAT.a:CAT.w,q=Q.trim().toLowerCase();
- let list=base.filter(x=>(chip=='All'||x.cat==chip)&&(!q||x.title.toLowerCase().includes(q)||x.cat.toLowerCase().includes(q)));
+ let list=base.filter(x=>(chip=='All'||x.cat==chip)&&(!q||(x.type=='a'&&x.title.toLowerCase().includes(q))||x.cat.toLowerCase().includes(q)));
  if(sortNew)list=[...list].reverse();
  let h='';
  if(kind=='w'&&!q&&chip=='All'&&!sortNew){
@@ -514,11 +519,11 @@ function explore(){
   h+=`<h3 class="sec">Popular</h3>`}
  else{h+=chipsHTML(base);if(sortNew)h+=`<h3 class="sec" style="margin-top:0">Newest <button class="link" style="font-size:0.8125rem" onclick="sortNew=false;explore()">Clear</button></h3>`}
  h+=list.length?(kind=='a'?`<div class="alist">${list.map(x=>arow(x,'explore')).join('')}</div>`:`<div class="grid">${list.map(x=>wcard(x,'')).join('')}</div>`):`<div class="empty">Nothing found.</div>`;
- if(kind=='w'&&!q&&chip=='All'&&base.length)h+=`<h3 class="sec">WhatsApp DPs &amp; contact avatars</h3><div class="hs">${base.slice(0,8).map(it=>`<div class="card f" style="width:6.875rem;height:6.875rem" onclick="wallView('${it.id}')">${art(it)}<div class="lab">${it.title}</div></div>`).join('')}</div>`;
+ if(kind=='w'&&!q&&chip=='All'&&base.length)h+=`<h3 class="sec">WhatsApp DPs &amp; contact avatars</h3><div class="hs">${base.slice(0,8).map(it=>`<div class="card f" style="width:6.875rem;height:6.875rem" onclick="wallView('${it.id}')">${art(it)}</div>`).join('')}</div>`;
  $('main').innerHTML=h;hydrate($('main'))}
 function seg2(cur,a,b,fn){return `<div class="chips" style="margin-bottom:0.375rem"><button class="chip ${cur=='a'?'on':''}" onclick="${fn}('a')">${a}</button><button class="chip ${cur=='w'?'on':''}" onclick="${fn}('w')">${b}</button></div>`}
 function vault(){const ids=S.dl.map(id=>ALL[id]||S.meta[id]).filter(x=>x&&x.type==vkind);
- $('main').innerHTML=`<h2 style="margin:0.375rem 0.125rem 0.625rem">Offline Vault</h2>`+seg2(vkind,'Saved Audio','Saved Wallpapers','setV')+(ids.length?(vkind=='a'?`<div class="alist">${ids.map(x=>arow(x,'vault')).join('')}</div>`:`<div class="grid">${ids.map(x=>`<div class="card" onclick="sheet('${x.id}')">${art(x)}<div class="lab">${x.title}</div></div>`).join('')}</div>`):`<div class="empty">Your vault is empty.<br>Download items from Explore to keep them offline.</div>`);hydrate($('main'))}
+ $('main').innerHTML=`<h2 style="margin:0.375rem 0.125rem 0.625rem">Offline Vault</h2>`+seg2(vkind,'Saved Audio','Saved Wallpapers','setV')+(ids.length?(vkind=='a'?`<div class="alist">${ids.map(x=>arow(x,'vault')).join('')}</div>`:`<div class="grid">${ids.map(x=>`<div class="card" onclick="sheet('${x.id}')">${art(x)}</div>`).join('')}</div>`):`<div class="empty">Your vault is empty.<br>Download items from Explore to keep them offline.</div>`);hydrate($('main'))}
 function setV(k){vkind=k;vault()}
 function fav(){const ids=S.fav.map(id=>ALL[id]||S.meta[id]).filter(x=>x&&!S.dl.includes(x.id));const a=ids.filter(x=>x.type=='a'),w=ids.filter(x=>x.type=='w');
  $('main').innerHTML=`<h2 style="margin:0.375rem 0.125rem 0.625rem">Favorites</h2>`+(ids.length?(a.length?`<div class="alist">${a.map(x=>arow(x,'explore')).join('')}</div>`:'')+(w.length?`<div class="grid">${w.map(x=>wcard(x,'')).join('')}</div>`:''):`<div class="empty">Items you like but haven't downloaded yet appear here.</div>`);hydrate($('main'))}
@@ -573,7 +578,7 @@ function audioView(id){const it=ALL[id];tS=0;tE=100;trimId=id;
  <button class="btn big" onclick="download('${id}').then(()=>sheet('${id}'))">${S.dl.includes(id)?'Set as…':'Download'}</button>
  <button class="ib" onclick="sheet('${id}')">${ic(I.more)}</button></div>`;hydrate($('view'))};
  window.drawA=draw;$('view').dataset.k='a';draw();$('view').classList.add('show')}
-function shareIt(id){const it=ALL[id]||S.meta[id],t=`${it.title} on Zon`+(it.url&&/^https?:/.test(it.url)?` ${it.url}`:'');if(!native('share',t))window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}
+function shareIt(id){const it=ALL[id]||S.meta[id],t=`${it.type=='a'?it.title:'A wallpaper'} on Zon`+(it.url&&/^https?:/.test(it.url)?` ${it.url}`:'');if(!native('share',t))window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}
 
 /* ---------- Actions ---------- */
 function toggleFav(id){const it=ALL[id];S.fav=S.fav.includes(id)?S.fav.filter(x=>x!=id):[...S.fav,id];if(S.fav.includes(id))S.meta[id]=S.meta[id]||it;save();if(!$('view').classList.contains('show'))render();else if(tab=='explore')explore()}
@@ -585,7 +590,7 @@ async function download(id){if(S.dl.includes(id)){toast('Already in your vault')
   catch(e){toast('Download failed. Check your connection.');return}}
  S.dl.push(id);S.meta[id]=it;S.size[id]=size;save();toast(S.saver?'Saved (compressed preview)':'Saved to your offline vault');if(!$('view').classList.contains('show'))render()}
 function sheet(id){const it=ALL[id]||S.meta[id],a=it.type=='a';
- $('sheet').innerHTML=`<div class="grab"></div><h3>${it.title}</h3>`+(a?
+ $('sheet').innerHTML=`<div class="grab"></div><h3>${a?it.title:'Wallpaper'}</h3>`+(a?
  `<button class="act" onclick="applyAudio('${id}','Ringtone')">${ic(I.ring)}Set as Ringtone</button>
   <button class="act" onclick="applyAudio('${id}','Notification sound')">${ic(I.bell)}Set as Notification sound</button>
   <button class="act" onclick="applyAudio('${id}','Alarm tone')">${ic(I.alarm)}Set as Alarm tone</button>
@@ -958,6 +963,28 @@ function drawStudio(){const sc=$('studio').scrollTop,sbE=document.querySelector(
  <div class="tabs"><button class="${sTab=='look'?'on':''}" onclick="sTab='look';drawStudio()">Look &amp; Feel</button><button class="${sTab=='set'?'on':''}" onclick="sTab='set';drawStudio()">Settings</button></div>
  <div class="sbody">${sTab=='look'?lookHTML():settingsHTML()}</div>`;
  refreshPv();$('studio').scrollTop=sc;const sb2=document.querySelector('#studio .sbody');if(sb2)sb2.scrollTop=sc2}
+
+/* ---------- Phone back button ---------- */
+/* Closes the top-most layer first, then goes back to Explore, then asks to press again to exit.
+   Native wrapper: call window.zonBack() from onBackPressed; exit only if it returns false. */
+let exitArm=0;
+function zonBack(){
+ const on=id=>{const e=$(id);return !!(e&&e.classList.contains('show'))};
+ if($('consent').style.display=='flex')return false;
+ if(on('mp')){closeMP();return true}
+ if(on('pick')){closePick();return true}
+ if(on('aod')){stopAod();return true}
+ if(on('dlg')||on('sheet')){closeSheet();return true}
+ if(on('sub')){$('sub').classList.remove('show');return true}
+ if(on('studio')){closeStudio();return true}
+ if(on('view')){closeView();return true}
+ if(tab!=='explore'){tab='explore';render();return true}
+ if(chip!=='All'||Q||sortNew){chip='All';Q='';sortNew=false;const qi=$('q');if(qi)qi.value='';explore();return true}
+ if(Date.now()<exitArm)return false;
+ exitArm=Date.now()+2000;toast('Press back again to exit');return true}
+window.zonBack=zonBack;
+try{history.replaceState({zon:0},'');history.pushState({zon:1},'');
+ addEventListener('popstate',()=>{if(zonBack())history.pushState({zon:1},'');else if(!native('exitApp'))history.back()})}catch(e){}
 
 /* ---------- Boot ---------- */
 applyTheme();
