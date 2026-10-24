@@ -313,6 +313,11 @@ svg.i .duo{fill-rule:evenodd}
 .nst{width:17em}
 .aod-pill{width:14.4em}
 .bp{width:11em}
+
+/* no text selection / long-press menu */
+*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea{-webkit-user-select:text;user-select:text}
+#aod,#aod *{-webkit-user-select:none;user-select:none}
 </style>
 </head>
 <body>
@@ -396,6 +401,7 @@ let ac;function tone(freqs,dur=1.2){try{ac=ac||new (window.AudioContext||window.
 let S={consent:null,theme:'dark',saver:false,fav:[],dl:[],meta:{},size:{}};
 try{Object.assign(S,JSON.parse(localStorage.getItem('zon')||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem('zon',JSON.stringify(S))}catch(e){}};
+document.addEventListener('contextmenu',e=>{if(!/INPUT|TEXTAREA/.test(e.target.tagName))e.preventDefault()});document.addEventListener('selectstart',e=>{if(!/INPUT|TEXTAREA/.test(e.target.tagName))e.preventDefault()});
 const AOD_MODE=location.hash=='#aod';
 let tab='explore',kind='w',chip='All',Q='',vkind='a',sortNew=false;
 let CAT={a:[],w:[],feat:[],cols:[]},ALL={};
@@ -767,12 +773,12 @@ loadFonts();
 
 /* ----- Full-screen mode ----- */
 let aodT,shiftT,offT,studioT;
-function startAod(){$('aod').classList.add('show');clearTimeout(aodT);loop();
+function startAod(){native('immersive',true);$('aod').classList.add('show');clearTimeout(aodT);loop();
  shiftT=setInterval(shift,Math.max(1,AO.shiftS||30)*1000);
  if(AO.offS)offT=setTimeout(stopAod,AO.offS*1000);
  try{const r=document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();Promise.resolve(r).then(lockRot).catch(lockRot)}catch(e){lockRot()}
  native('setAutoRotate',!!AO.rot)}
-function stopAod(){if(AOD_MODE)native('finishAod');$('aod').classList.remove('show');clearTimeout(aodT);clearInterval(shiftT);clearTimeout(offT);try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}try{document.fullscreenElement&&document.exitFullscreen()}catch(e){}}
+function stopAod(){if(AOD_MODE)native('finishAod');else native('immersive',false);$('aod').classList.remove('show');clearTimeout(aodT);clearInterval(shiftT);clearTimeout(offT);try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}try{document.fullscreenElement&&document.exitFullscreen()}catch(e){}}
 function shift(){$('aodin').style.transform=`translate(${(Math.random()*40-20)|0}px,${(Math.random()*60-30)|0}px)`} /* burn-in protection */
 const isLand=()=>innerWidth>innerHeight*1.1;
 const aodK=()=>isLand()?Math.max(.35,Math.min(innerWidth/760,innerHeight/340,3.2)):Math.max(.35,Math.min(innerWidth/400,innerHeight/620,3.2));
