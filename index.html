@@ -315,6 +315,37 @@ svg.i .duo{fill-rule:evenodd}
 .aod-pill{width:14.4em}
 .bp{width:11em}
 
+/* pill sizing: --ps follows the "Pill size" slider, so battery, music and notification pills scale together */
+.aob{width:100%;box-sizing:border-box;padding:0 .4em}
+.nst{font-size:calc(.8em*var(--ps,1));width:19.5em;max-width:96%;height:4.4em}
+.np{height:3.2em}
+.np>div{flex:1;min-width:0;line-height:1.25}
+.np b,.np small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np em{flex:none}
+.aod-pill{font-size:calc(.8em*var(--ps,1));min-height:3.2em;gap:.5em;max-width:96%;padding:.45em .5em .45em .45em}
+.aod-art{flex:none}
+.mtx{flex:1;min-width:0;text-align:left;line-height:1.3}
+.mtx b,.mtx span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtx span{opacity:.7;font-size:.88em}
+.mb{flex:none;display:grid;place-items:center;padding:.3em;border-radius:50%}
+.mb:active{background:#ffffff22}
+/* full music player */
+#mpbg{position:fixed;inset:-3rem;z-index:0;background-size:cover;background-position:center;pointer-events:none}
+#mpbg.img::after{content:"";position:absolute;inset:0;background:linear-gradient(#0003,#000a)}
+.mpc{position:relative;z-index:1}
+.mpcard{display:flex;flex-direction:column;gap:1.1rem}
+#mp.tr .mpart{width:62%;margin:0 auto}
+#mp.c1 .mpcard{background:#14101fe0;border-radius:1.8rem;padding:1.2rem}
+#mp.c2 .mpcard{background:#ffffff1f;border:1px solid #ffffff38;border-radius:1.8rem;padding:1.2rem;-webkit-backdrop-filter:blur(26px) saturate(1.5);backdrop-filter:blur(26px) saturate(1.5);box-shadow:0 1rem 2.5rem #0005,inset 0 1px 0 #ffffff40}
+.mpft button{display:flex;flex-direction:column;align-items:center;gap:.25rem;color:#fff9;font-size:.7rem;padding:.45rem 1rem;border-radius:1rem}
+.mpft button.on{color:#fff;background:#ffffff22}.mpft button.on svg{stroke:#fff}
+.mptray{display:none;background:#0000004d;border-radius:1.2rem;padding:.7rem;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:center}
+.mptray.show{display:flex}
+.mpsw{width:2.2rem;height:2.2rem;border-radius:50%;border:2px solid #ffffff44;flex:none}.mpsw.on{border-color:#fff}
+.mpch{padding:.45rem .8rem;border-radius:2rem;background:#ffffff1f;font-size:.85rem;color:#fff}.mpch.on{background:#fff;color:#111}
+.mptray label{width:100%;font-size:.8rem;opacity:.75}
+.mptray input[type=range]{width:100%;accent-color:#fff}
+
 /* no text selection / long-press menu */
 *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 input,textarea{-webkit-user-select:text;user-select:text}
@@ -357,12 +388,15 @@ input,textarea{-webkit-user-select:text;user-select:text}
 </div>
 <div id="studio"></div>
 <div id="aod"><div id="aodin"></div><div class="aodtools" id="aodtools"></div></div>
-<div id="mp"><div class="mpc"><div class="grab" onclick="closeMP()"></div><div class="mpart"></div>
+<div id="mp"><div id="mpbg"></div><div class="mpc"><div class="grab" onclick="closeMP()"></div>
+<div class="mpcard"><div class="mpart"></div>
 <div class="mpt"><b id="mpTi">Nothing playing</b><span id="mpAr"></span></div>
 <div class="mps" onclick="mpSeek(event)"><i id="mpbar"></i></div><div class="mptm"><span id="mpa"></span><span id="mpb"></span></div>
 <div class="mpctl"><svg viewBox="0 0 24 24" onclick="native('skipPrev')"><path d="M11 6v12L2 12zM22 6v12l-9-6z"/></svg><span class="pp" onclick="mpPlay()"><svg id="mpp" viewBox="0 0 24 24"></svg></span><svg viewBox="0 0 24 24" onclick="native('skipNext')"><path d="M13 6v12l9-6zM2 6v12l9-6z"/></svg></div>
-<div class="mpvol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/></svg><input type="range" value="70"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9zM15 8a5 5 0 010 8M17.5 5a9 9 0 010 14" style="stroke:#fff9;stroke-width:2;fill:#fff9"/></svg></div>
-<div class="mpft"><svg viewBox="0 0 24 24"><path d="M4 17h16M7 13h10M10 9h4"/></svg><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="3"/><path d="M6 20l6-6 6 6z"/></svg><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div></div></div>
+<div class="mpvol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/></svg><input type="range" id="mpVol" min="0" max="100" value="70" oninput="mpSetVol(+this.value)"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9zM15 8a5 5 0 010 8M17.5 5a9 9 0 010 14" style="stroke:#fff9;stroke-width:2;fill:#fff9"/></svg></div></div>
+<div class="mptray" id="mptray"></div>
+<div class="mpft"><button data-t="bg" onclick="mpTrayOpen('bg')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>Background</button><button data-t="card" onclick="mpTrayOpen('card')"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="4"/></svg>Card</button><button data-t="blur" onclick="mpTrayOpen('blur')"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.2 6 10.5A6 6 0 016 13.5C6 9.2 12 3 12 3z"/></svg>Blur</button></div></div>
+<input type="file" id="mpPhotoIn" accept="image/*" style="display:none" onchange="mpPhoto(this)"></div>
 <div id="pickbg" onclick="closePick()"></div><div id="pick"></div>
 <div class="toast" id="toast"></div>
 <input type="file" id="camIn" accept="image/*" capture="environment" style="display:none">
@@ -494,7 +528,17 @@ function set(){const tn={dark:'Dark',light:'Light',system:'System Default'}[S.th
  <div class="row" onclick="pickTheme()"><div>Theme<small>Dark, Light or System Default</small></div><span class="rv">${tn} ›</span></div>
  <div class="row"><div>Data Saver<small>Download compressed previews</small></div><div class="sw ${S.saver?'on':''}" onclick="S.saver=!S.saver;save();set()"></div></div>
  <div class="row"><div>Local cache<small>${cacheMB()} MB used · ${S.dl.length} items</small></div><button class="chip on" onclick="clearCache()">Clear Offline Cache</button></div>
+ <div class="row"><div>Back up<small>Save favorites and screen saver settings to a file</small></div><button class="chip on" onclick="backupData()">Back up</button></div>
+ <div class="row"><div>Restore<small>Load a Zon backup file</small></div><button class="chip on" onclick="$('bkIn').click()">Restore</button><input type="file" id="bkIn" accept=".json,application/json" style="display:none" onchange="restoreData(this)"></div>
  <div class="sfoot"><a onclick="openSub('about')">About Zon</a>·<a onclick="openSub('privacy')">Privacy Policy</a>·<a onclick="openSub('terms')">Terms of Use</a><div>Zon 1.0.0</div></div></div>`}
+function backupData(){const keep={};S.fav.forEach(id=>{if(S.meta[id])keep[id]=S.meta[id]});let mine=null;try{mine=JSON.parse(localStorage.getItem('zonAodMine')||'null')}catch(e){}
+ const txt=JSON.stringify({zon:1,S:{fav:S.fav,meta:keep,theme:S.theme,saver:S.saver},AO,mine}),name='zon-backup.json';
+ if(!native('saveText',name,txt)){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;a.click();toast('Backup saved')}}
+function restoreData(inp){const f=inp.files[0];inp.value='';if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const d=JSON.parse(r.result);if(!d||d.zon!==1)throw 0;const s2=d.S||{};
+  S.fav=[...new Set([...S.fav,...(s2.fav||[])])];Object.assign(S.meta,s2.meta||{});if(s2.theme)S.theme=s2.theme;if(typeof s2.saver=='boolean')S.saver=s2.saver;save();
+  if(d.AO){AO={...AO_DEF,...d.AO};saveAO()}if(d.mine)try{localStorage.setItem('zonAodMine',JSON.stringify(d.mine))}catch(e){}
+  applyTheme();syncSched();toast('Backup restored');set()}catch(e){toast('That is not a Zon backup file')}};r.readAsText(f)}
 function pickTheme(){openPick('Theme',[['dark','Dark'],['light','Light'],['system','System Default']],S.theme,v=>{S.theme=v;save();applyTheme();set()})}
 /* custom picker: fades in right where you tap (no dropdown that grows from the top) */
 let pkCb=null,pkO=[];
@@ -515,8 +559,8 @@ function wallView(id){const it=ALL[id];$('view').dataset.k='w';
  <button class="btn big" onclick="wallDialog('${id}')">Apply</button>
  <button class="ib ${S.dl.includes(id)?'ok':''}" style="background:#0008;color:#fff" onclick="download('${id}').then(()=>wallView('${id}'))">${ic(S.dl.includes(id)?I.check:I.dl)}</button></div>`;
  $('view').classList.add('show');hydrate($('view'))}
-let tS=10,tE=70;
-function audioView(id){const it=ALL[id];tS=10;tE=70;
+let tS=0,tE=100,trimId='';
+function audioView(id){const it=ALL[id];tS=0;tE=100;trimId=id;
  const draw=()=>{const bars=[...Array(44)].map((_,i)=>{const p=i*100/44;return `<i class="${p>=tS&&p<=tE?'in':''}" style="height:${25+Math.abs(Math.sin(i*1.3)*Math.cos(i*.4))*75}%"></i>`}).join('');
  $('view').innerHTML=`<div class="bar"><button class="ib" onclick="closeView()">${ic(I.back)}</button><button class="ib" onclick="shareIt('${id}')">${ic(I.share)}</button></div>
  <div style="padding:0.375rem 2.5rem"><div class="card" style="width:min(100%,42vh);margin:0 auto;aspect-ratio:1;border-radius:1.5rem;cursor:default;background:${it.g}">${art(it)}<button onclick="playItem(ALL['${id}'],tS,tE)" style="position:absolute;inset:0;margin:auto;width:4.75rem;height:4.75rem;border-radius:50%;background:#000b;display:grid;place-items:center;color:#fff">${ic(I.play).replace('class="i"','class="i" style="width:2.125rem;height:2.125rem;fill:#fff"')}</button></div>
@@ -529,7 +573,7 @@ function audioView(id){const it=ALL[id];tS=10;tE=70;
  <button class="btn big" onclick="download('${id}').then(()=>sheet('${id}'))">${S.dl.includes(id)?'Set as…':'Download'}</button>
  <button class="ib" onclick="sheet('${id}')">${ic(I.more)}</button></div>`;hydrate($('view'))};
  window.drawA=draw;$('view').dataset.k='a';draw();$('view').classList.add('show')}
-function shareIt(id){const it=ALL[id];window.open('https://wa.me/?text='+encodeURIComponent(`${it.title} on Zon`),'_blank')}
+function shareIt(id){const it=ALL[id]||S.meta[id],t=`${it.title} on Zon`+(it.url&&/^https?:/.test(it.url)?` ${it.url}`:'');if(!native('share',t))window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}
 
 /* ---------- Actions ---------- */
 function toggleFav(id){const it=ALL[id];S.fav=S.fav.includes(id)?S.fav.filter(x=>x!=id):[...S.fav,id];if(S.fav.includes(id))S.meta[id]=S.meta[id]||it;save();if(!$('view').classList.contains('show'))render();else if(tab=='explore')explore()}
@@ -547,18 +591,28 @@ function sheet(id){const it=ALL[id]||S.meta[id],a=it.type=='a';
   <button class="act" onclick="applyAudio('${id}','Alarm tone')">${ic(I.alarm)}Set as Alarm tone</button>
   <button class="act" onclick="closeSheet();audioView('${id}')">${ic(I.trim)}Trim audio</button>`:
  `<button class="act" onclick="wallDialog('${id}')">${ic(I.img)}Apply wallpaper</button>`)+
+ `<button class="act" onclick="closeSheet();shareIt('${id}')">${ic(I.share)}Share</button>`+
  `<button class="act" onclick="exportIt('${id}')">${ic(I.exp)}Export to ${a?'storage':'Gallery'}</button>`+
  (S.dl.includes(id)?`<button class="act del" onclick="removeIt('${id}')">${ic(I.trash)}Delete from vault</button>`:'');
  $('sbg').classList.add('show');$('sheet').classList.add('show')}
 function closeSheet(){$('sbg').classList.remove('show');$('sheet').classList.remove('show');$('dlg').classList.remove('show')}
-function applyAudio(id,as){closeSheet();const it=ALL[id]||S.meta[id];playItem(it,tS,tE);if(!native('setAudio',id,as,tS,tE,(it&&it.url)||''))toast(as+' set (on device this needs the Modify system settings permission)');else toast(as+' set')}
-function exportIt(id){closeSheet();if(!native('exportItem',id,(ALL[id]||S.meta[id]).url||''))toast('Exported to '+((ALL[id]||S.meta[id]).type=='a'?'Music/Zon':'Pictures/Zon'))}
+/* The offline copy lives in the browser cache, so it is handed to the app and works without internet */
+async function vaultB64(id){try{if(!window.caches)return '';const urls=[...new Set([ALL[id]&&ALL[id].url,S.meta[id]&&S.meta[id].url].filter(Boolean))],c=await caches.open('zon');
+ for(const u of urls){const r=await c.match(u);if(r){const b=await r.blob();return await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(',')[1]||'');fr.onerror=()=>res('');fr.readAsDataURL(b)})}}}catch(e){}return ''}
+const hasNative=fn=>!!(window.ZonNative&&ZonNative[fn]);
+async function applyAudio(id,as){closeSheet();const it=ALL[id]||S.meta[id],a0=trimId===id?tS:0,b0=trimId===id?tE:100;playItem(it,a0,b0);
+ if(!hasNative('setAudio')){toast(as+' set (on device this needs the Modify system settings permission)');return}
+ const b=await vaultB64(id);ZonNative.setAudio(id,as,a0,b0,(it&&it.url)||'',b)}
+async function exportIt(id){closeSheet();const it=ALL[id]||S.meta[id];
+ if(!hasNative('exportItem')){toast('Exported to '+(it.type=='a'?'Music/Zon':'Pictures/Zon'));return}
+ const b=await vaultB64(id);ZonNative.exportItem(id,it.url||'',b)}
 async function removeIt(id){const it=S.meta[id];try{if(window.caches&&it&&it.url)await (await caches.open('zon')).delete(it.url)}catch(e){}S.dl=S.dl.filter(x=>x!=id);delete S.size[id];save();closeSheet();toast('Removed');render()}
 function wallDialog(id){$('sheet').classList.remove('show');
  $('dlg').innerHTML=`<h3 style="margin:0 0 0.25rem">Apply wallpaper</h3><p style="color:var(--mut);margin:0 0 0.5rem;font-size:0.875rem">Where should it go?</p>
  ${['Home Screen','Lock Screen','Both'].map(w=>`<button class="act" onclick="applyWall('${id}','${w}')">${w}</button>`).join('')}<button class="btn ghost" onclick="closeSheet()">Cancel</button>`;
  $('sbg').classList.add('show');$('dlg').classList.add('show')}
-function applyWall(id,where){closeSheet();if(!native('setWallpaper',id,where,(ALL[id]||S.meta[id]).url||''))toast('Wallpaper set on '+where)}
+async function applyWall(id,where){closeSheet();const it=ALL[id]||S.meta[id];if(!hasNative('setWallpaper')){toast('Wallpaper set on '+where);return}
+ const b=await vaultB64(id);ZonNative.setWallpaper(id,where,(it&&it.url)||'',b);toast('Setting wallpaper...')}
 
 /* ---------- About / legal ---------- */
 const SUBS={
@@ -580,7 +634,7 @@ function agree(){S.consent=POLICY_VERSION;save();$('consent').style.display='non
 function decline(){toast('Zon needs your agreement to run');native('exitApp')}
 
 /* ---------- AOD Studio (customizable screen saver / always-on display) ---------- */
-const AO_DEF={fill:false,fmode:0,style:0,font:0,color:'#F9FAFB',size:20,bright:100,date:'top',batt:true,bstyle:0,bsize:100,tfont:0,tsize:20,sl:'flash',sr:'cam',sim:false,notif:true,media:false,quote:false,h24:true,secs:false,shiftS:30,offS:0,dbl:true,short:true,rot:true,glow:true};
+const AO_DEF={fill:false,fmode:0,style:0,font:0,color:'#F9FAFB',size:20,bright:100,date:'top',batt:true,bstyle:0,bsize:100,tfont:0,tsize:20,sl:'flash',sr:'cam',sim:false,notif:true,media:false,quote:false,h24:true,secs:false,shiftS:30,offS:0,dbl:true,short:true,rot:true,glow:true,mpbg:'def',mpcard:0,mpblur:24,mtsize:100,mbsize:100,sched:false,schS:1320,schE:360,npriv:false};
 let AO={...AO_DEF};try{Object.assign(AO,JSON.parse(localStorage.getItem('zonAod')||'{}'))}catch(e){}
 if(AO.widget)AO.batt=true;['widget','viz','off','shift'].forEach(k=>delete AO[k]);
 if(!AO.v){AO.short=true;AO.v=2}
@@ -652,14 +706,48 @@ const FP={prev:'M6 5h2v14H6zM19 5v14L9 12z',next:'M16 5h2v14h-2zM5 5v14l10-7z',p
 const NOTIFS=[];
 let nOff=0;
 const nK=()=>{const n=NOTIFS.length;return n?(((Math.floor(Date.now()/5000)+nOff)%n)+n)%n:0};
-function nStack(){const n=NOTIFS.length,k=nK();if(!n)return '';return `<div class="nst">${[2,1,0].filter(j=>j<n).map(j=>{const x=NOTIFS[(k+j)%n];return `<div class="np k${j}"><i style="background:${x[1]}">${x[0]}</i><div><b>${x[2]}</b><small>${x[3]}</small></div><em>${x[4]}</em></div>`}).join('')}</div>`}
+const DEMO_N=[['D','#3B82F6','Download Manager','index.html: Download complete.','22:39',''],['M','#10B981','Messages','Hey, are we still on for tonight?','22:31','']];
+function nStack(pv){const L=(!NOTIFS.length&&pv)?DEMO_N:NOTIFS,n=L.length,k=pv?0:nK();if(!n)return '';return `<div class="nst">${[2,1,0].filter(j=>j<n).map(j=>{const x=L[(k+j)%n];return `<div class="np k${j}"><i style="background:${x[1]}">${x[0]}</i><div><b>${x[2]}</b><small>${AO.npriv?'New notification':x[3]}</small></div><em>${x[4]}</em></div>`}).join('')}</div>`}
 let mpT=null,mpP=true,mpS=0,MPD=0,MT=null;const esc=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),mpF=s=>Math.floor(s/60)+':'+pad(Math.floor(s%60));
-function mpDraw(){$('mpbar').style.width=(MPD?mpS/MPD*100:0)+'%';$('mpTi').textContent=MT?MT.title:'Nothing playing';$('mpAr').textContent=MT?MT.artist:'';const ar=document.querySelector('.mpart');if(ar)ar.style.background=MT&&MT.art?`url(${MT.art}) center/cover`:'';$('mpa').textContent=mpF(mpS);$('mpb').textContent='-'+mpF(MPD-mpS);$('mpp').innerHTML=`<path d="${mpP?FP.pause:FP.play}"/>`;$('mp').classList.toggle('pz',!mpP)}
-function openMP(){if(!MT||!$('aod').classList.contains('show'))return;$('mp').classList.add('show');mpDraw();clearInterval(mpT);mpT=setInterval(()=>{if(mpP&&MPD){mpS=Math.min(MPD,mpS+1);mpDraw()}},1000)}
+function mpDraw(){mpApply();$('mpbar').style.width=(MPD?mpS/MPD*100:0)+'%';$('mpTi').textContent=MT?MT.title:'Nothing playing';$('mpAr').textContent=MT?MT.artist:'';const ar=document.querySelector('.mpart');if(ar)ar.style.background=MT&&MT.art?`url(${MT.art}) center/cover`:'';$('mpa').textContent=mpF(mpS);$('mpb').textContent='-'+mpF(MPD-mpS);$('mpp').innerHTML=`<path d="${mpP?FP.pause:FP.play}"/>`;$('mp').classList.toggle('pz',!mpP)}
+function openMP(){if(!MT||!$('aod').classList.contains('show'))return;$('mp').classList.add('show');mpDraw();mpVolSync();clearInterval(mpT);mpT=setInterval(()=>{mpVolSync();if(mpP&&MPD){mpS=Math.min(MPD,mpS+1);mpDraw()}},1000)}
 function closeMP(){$('mp').classList.remove('show');clearInterval(mpT)}
-function mpPlay(){native('playPause');mpP=!mpP;mpDraw()}
+function mpPlay(){native('playPause');mpP=!mpP;mpDraw();if($('aod').classList.contains('show'))tick()}
 /* Native app: zonSetTrack({title,artist,art,playing,pos,dur}) or zonSetTrack(null) when nothing plays */
 window.zonSetTrack=t=>{MT=t||null;mpP=!!(t&&t.playing!==false);mpS=t&&t.pos||0;MPD=t&&t.dur||0;if(!MT)closeMP();else if($('mp').classList.contains('show'))mpDraw();if($('aod').classList.contains('show'))tick()}
+/* ----- Volume: talks to the phone's media volume through the app ----- */
+const nget=(fn,...a)=>{try{return window.ZonNative&&ZonNative[fn]?ZonNative[fn](...a):null}catch(e){return null}};
+let mpVT=null,mpVDrag=false;
+function mpSetVol(v){mpVDrag=true;clearTimeout(mpVT);mpVT=setTimeout(()=>{mpVDrag=false},900);native('setVolume',v)}
+function mpVolSync(){if(mpVDrag)return;const v=nget('getVolume'),e=$('mpVol');if(v!=null&&e)e.value=v}
+/* ----- Player look: background, card (rounded rectangle) and blur ----- */
+const MPBG={def:'',sun:'linear-gradient(160deg,#f97316,#be185d 55%,#1c0a1f)',sea:'linear-gradient(160deg,#0ea5e9,#1e3a8a 55%,#020617)',forest:'linear-gradient(160deg,#22c55e,#14532d 55%,#021208)',rose:'linear-gradient(160deg,#f472b6,#7c3aed 55%,#120a24)',black:'#000'};
+let _mk='',mpTab='';
+function mpApply(){const k=[AO.mpbg,AO.mpcard,AO.mpblur,MT&&MT.art?MT.art.length:0,MT&&MT.title].join('|');if(k===_mk)return;_mk=k;
+ const m=$('mp'),b=$('mpbg'),t=AO.mpbg||'def';let bg='';
+ if(t=='art'&&MT&&MT.art)bg=`url("${MT.art}") center/cover`;
+ else if(t=='photo'){let u='';try{u=localStorage.getItem('zonMpBg')||''}catch(e){}if(u)bg=`url("${u}") center/cover`}
+ else bg=MPBG[t]||'';
+ b.style.background=bg||'none';const bl=+AO.mpblur||0;b.style.filter=bl?`blur(${bl}px)`:'none';b.classList.toggle('img',/url\(/.test(bg));
+ m.classList.toggle('c1',AO.mpcard==1);m.classList.toggle('c2',AO.mpcard==2)}
+function mpSet(k,v){AO[k]=v;saveAO();_mk='';mpApply();mpTrayDraw()}
+function mpSetBlur(v){AO.mpblur=v;saveAO();_mk='';mpApply()}
+function mpTrayOpen(t){mpTab=mpTab==t?'':t;mpTrayDraw()}
+function mpTrayDraw(){const tr=$('mptray');$('mp').classList.toggle('tr',!!mpTab);document.querySelectorAll('.mpft button').forEach(b=>b.classList.toggle('on',b.dataset.t==mpTab));
+ if(!mpTab){tr.classList.remove('show');tr.innerHTML='';return}
+ let h='';const cur=AO.mpbg||'def';
+ if(mpTab=='bg'){
+  h=Object.keys(MPBG).map(k=>`<button class="mpsw ${cur==k?'on':''}" style="background:${MPBG[k]||'linear-gradient(160deg,#5b3a8a,#1a1030 55%,#000)'}" onclick="mpSet('mpbg','${k}')"></button>`).join('')+
+  `<div style="width:100%;display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap"><button class="mpch ${cur=='art'?'on':''}" onclick="mpSet('mpbg','art')">Album art</button><button class="mpch ${cur=='photo'?'on':''}" onclick="mpUsePhoto()">My photo</button><button class="mpch" onclick="mpPickPhoto()">+ New photo</button></div>`}
+ else if(mpTab=='card'){h=[['Off',0],['Normal',1],['Glass',2]].map(([n,v])=>`<button class="mpch ${(AO.mpcard||0)==v?'on':''}" onclick="mpSet('mpcard',${v})">${n}</button>`).join('')}
+ else h=`<label>Background blur</label><input type="range" min="0" max="40" value="${AO.mpblur||0}" oninput="mpSetBlur(+this.value)">`;
+ tr.innerHTML=h;tr.classList.add('show')}
+function mpUsePhoto(){let u='';try{u=localStorage.getItem('zonMpBg')||''}catch(e){}if(u)mpSet('mpbg','photo');else mpPickPhoto()}
+function mpPickPhoto(){$('mpPhotoIn').click()}
+function mpPhoto(inp){const f=inp.files[0];inp.value='';if(!f)return;const im=new Image();
+ im.onload=()=>{const k=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  try{localStorage.setItem('zonMpBg',c.toDataURL('image/jpeg',.8));mpSet('mpbg','photo')}catch(e){toast('Not enough storage for this photo')}URL.revokeObjectURL(im.src)};
+ im.src=URL.createObjectURL(f)}
 function mpSeek(e){if(!MPD)return;const r=e.currentTarget.getBoundingClientRect();mpS=Math.max(0,Math.min(MPD-1,Math.round((e.clientX-r.left)/r.width*MPD)));mpDraw()}
 let _ty=0;$('mp').addEventListener('touchstart',e=>_ty=e.touches[0].clientY,{passive:true});$('mp').addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-_ty>110)closeMP()});
 const stc=(i,n,t)=>`<button class="stc ${AO.style==i?'on':''}" onclick="pick('style',${i})"><div style="font-size:0.275rem;color:${AO.color}">${clockHTML(t,i,AO.font)}</div><small>${n}</small></button>`;
@@ -692,7 +780,7 @@ function analogHTML(k,d,hh,mm){
  if(k==14)b=['😀','😎','🥳','😴','🤩','😍','🤔','😂','🙃','😌','🤗','😇'].map((e,i)=>`<text font-size="17" text-anchor="middle" dominant-baseline="central" transform="rotate(${i*30}) translate(0,-80) rotate(${-i*30})">${e}</text>`).join('')+H(40,4,62,3);
  return `<svg viewBox="-100 -100 200 200" style="width:11em;height:11em;overflow:visible">${b}${sec}<circle r="4" fill="currentColor"/></svg>`}
 
-function nRefresh(){document.querySelectorAll('.nslot').forEach(ns=>{const h=nStack();ns._h=h;ns.innerHTML=h})}
+function nRefresh(){document.querySelectorAll('.nslot').forEach(ns=>{const h=nStack(!!ns.closest('#pvAod'));ns._h=h;ns.innerHTML=h})}
 /* Native app can call these: zonSetNotifs([{app,text,time,color,pkg}]) and zonClearNotifs() when the system panel is cleared */
 window.zonClearNotifs=()=>{NOTIFS.length=0;nOff=0;nRefresh()};
 window.zonSetNotifs=a=>{const was=NOTIFS.length;NOTIFS.length=0;(a||[]).forEach(x=>NOTIFS.push([(x.app||'?')[0].toUpperCase(),x.color||'#3B82F6',x.app||'',x.text||'',x.time||'',x.pkg||'']));nOff=0;nRefresh();if(AO.glow!==false&&(a||[]).length>was&&$('aod').classList.contains('show'))glowEdge((a[0]&&a[0].color)||'#818CF8')};
@@ -714,7 +802,7 @@ function battHTML(l,chg,mins,sty,compact,bs){
  const cm=sty==6&&chg?'<u class="cm"></u>':'';
  const ico=chg?`<svg viewBox="0 0 24 24"><path d="${SI.bolt}"/></svg>`:`<svg class="o" viewBox="0 0 24 24"><path d="M4 7h13a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8a1 1 0 011-1zM21 10.5v3"/></svg>`;
  return `<div class="bpw" style="font-size:${(bs||100)/100}em"><div class="bp s${sty}${chg?' chg':''}${low?' low':''}" style="--w:${w}%"><div class="bp-f">${fx}</div>${seg}${cm}<div class="bp-t">${ico}<span>${pc}%</span></div></div>${compact?'':`<div class="aod-batt">${battStatus(chg,mins)}</div>`}</div>`}
-function aodParts(d){
+function aodParts(d,pv){
  const dt=`<div class="aod-date">${d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'})}</div>`;
  let top='',mid=`<div style="font-size:${(AO.size/AO.tsize).toFixed(3)}em;display:flex;flex-direction:column;align-items:center">${fillOn()?fillClock(d):clockHTML(d)}</div>`,bot='';
  if(AO.date=='top')top+=dt;
@@ -723,7 +811,10 @@ function aodParts(d){
  if(AO.quote)mid+=`<div class="aod-q">${QUOTES[(d.getDate()+d.getMonth())%QUOTES.length]}</div>`;
  if(AO.date=='bottom')bot+=dt;
  if(AO.notif)bot+='<div class="nslot"></div>';
- if(AO.media&&MT)bot+=`<div class="aod-pill" onclick="event.stopPropagation();openMP()"><div class="aod-art" style="${MT.art?`background:url(${MT.art}) center/cover`:''}"></div><div style="text-align:left;line-height:1.3;flex:1;min-width:0"><b>${esc(MT.title)}</b><br><span style="opacity:.7">${esc(MT.artist)}</span></div><svg class="f" viewBox="0 0 24 24"><path d="${FP.prev}"/></svg><svg class="f" viewBox="0 0 24 24"><path d="${FP.pause}"/></svg><svg class="f" viewBox="0 0 24 24"><path d="${FP.next}"/></svg></div>`;
+ const TM=MT||(pv?{title:'Forever Young (Drill)',artist:'Ogoh Precious'}:null);
+ if(AO.media&&TM){const mt=(AO.mtsize||100)/100,mb=(AO.mbsize||100)/100,bw=(1.25*mb).toFixed(2),pw=(18.5+(mb-1)*3.75+(mt-1)*4).toFixed(2),pp=(MT?mpP:true)?FP.pause:FP.play,
+  btn=(fn,d)=>`<button class="mb" onclick="event.stopPropagation();${fn}" ondblclick="event.stopPropagation()"><svg class="f" viewBox="0 0 24 24" style="width:${bw}em;height:${bw}em"><path d="${d}"/></svg></button>`;
+  bot+=`<div class="aod-pill" style="width:${pw}em" onclick="event.stopPropagation();openMP()" ondblclick="event.stopPropagation()"><div class="aod-art" style="${TM.art?`background:url(${TM.art}) center/cover`:''}"></div><div class="mtx" style="font-size:${mt}em"><b>${esc(TM.title)}</b><span>${esc(TM.artist)}</span></div>${btn("native('skipPrev')",FP.prev)}${btn("mpPlay()",pp)}${btn("native('skipNext')",FP.next)}</div>`}
  if(AO.batt)bot+='<div class="battslot"></div>';
  return{top,mid,bot}}
 /* ----- Shortcuts: flashlight, camera, phone, messages (left and right are customizable) ----- */
@@ -747,12 +838,12 @@ async function scAct(a){
  else if(a=='sms'){if(!native('openMessages'))location.href='sms:'}}
 /* Paints into el. Only the parts that changed are touched, so battery animations never restart and nothing lags. */
 function paintAod(el,px,land,sim){
- const p=aodParts(new Date()),F=FONTS[AO.tfont]||FONTS[0],fw=Math.max(400,Math.min(700,F[2])),sc=!!AO.short;
- const sig=[px.toFixed(2),land?1:0,AO.color,AO.bright,sc?AO.sl+'/'+AO.sr+(FL?1:0):0,AO.tfont,F[1]].join('|');
- if(el._sg!==sig){el._sg=sig;el._z=null;el.innerHTML=`<div class="aoc${land?' land':''}" style="font-size:${px}px;color:${AO.color};opacity:${AO.bright/100};font-family:${F[1]};font-weight:${fw}"><div class="aot"></div><div class="aom"></div><div class="aob"></div>${sc?scHTML():''}</div>`}
+ const p=aodParts(new Date(),el.id=='pvAod'),F=FONTS[AO.tfont]||FONTS[0],fw=Math.max(400,Math.min(700,F[2])),sc=!!AO.short;
+ const sig=[px.toFixed(2),land?1:0,AO.color,AO.bright,sc?AO.sl+'/'+AO.sr+(FL?1:0):0,AO.tfont,F[1],AO.bsize].join('|');
+ if(el._sg!==sig){el._sg=sig;el._z=null;el.innerHTML=`<div class="aoc${land?' land':''}" style="font-size:${px}px;--ps:${(AO.bsize||100)/100};color:${AO.color};opacity:${AO.bright/100};font-family:${F[1]};font-weight:${fw}"><div class="aot"></div><div class="aom"></div><div class="aob"></div>${sc?scHTML():''}</div>`}
  const z=el._z||(el._z={}),q=el.firstChild;
  [['top','.aot'],['mid','.aom'],['bot','.aob']].forEach(([k,sl])=>{if(z[k]!==p[k]){z[k]=p[k];q.querySelector(sl).innerHTML=p[k]}});
- const ns=q.querySelector('.nslot');if(ns){const hh2=nStack();if(ns._h!==hh2){ns._h=hh2;ns.innerHTML=hh2}}
+ const ns=q.querySelector('.nslot');if(ns){const hh2=nStack(el.id=='pvAod');if(ns._h!==hh2){ns._h=hh2;ns.innerHTML=hh2}}
  if(AO.batt){const bs=q.querySelector('.battslot');if(bs){
   const chg=sim||batt.c,mins=battMins(sim),l=preciseL(),sty=AO.bstyle||0,low=!chg&&l<=.15,k=[chg?1:0,sty,low?1:0,sty==3?Math.floor(l*10):0,AO.bsize].join();
   if(bs._k!==k){bs._k=k;bs.innerHTML=battHTML(l,chg,mins,sty,false,AO.bsize)}
@@ -808,7 +899,7 @@ function openStudio(){$('studio').classList.add('show');drawStudio();clearTimeou
 function closeStudio(){$('studio').classList.remove('show');clearTimeout(studioT)}
 function refreshPv(){const e=$('pvAod');if(e)paintAod(e,AO.tsize*.36*((e.clientWidth||122)/122),false,AO.sim)}
 function setAO(k,v){AO[k]=v;saveAO();refreshPv()}
-function tg(k){AO[k]=!AO[k];saveAO();if((k=='notif'||k=='media')&&AO[k]&&!hasNA())askNA();if(k=='bg'&&!native('setBackground',!!AO.bg))toast('Works only in the installed app');drawStudio()}
+function tg(k){AO[k]=!AO[k];saveAO();if((k=='notif'||k=='media')&&AO[k]&&!hasNA())askNA();if(k=='bg'&&!native('setBackground',!!AO.bg))toast('Works only in the installed app');if(k=='sched')syncSched();drawStudio()}
 function pick(k,v){AO[k]=v;saveAO();drawStudio()}
 function usePreset(n){const p=n=='Mine'?JSON.parse(localStorage.getItem('zonAodMine')||'{}'):PRESETS[n];Object.assign(AO,p);saveAO();drawStudio()}
 function saveMine(){try{localStorage.setItem('zonAodMine',JSON.stringify(AO));try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}toast('\u2713 Saved as My preset');drawStudio()}catch(e){toast('Could not save preset')}}
@@ -829,7 +920,9 @@ function lookHTML(){const t=new Date(2020,0,1,10,8,0),mine=localStorage.getItem(
  <h3 class="sec">Color</h3><div class="stl">${COLORS.map(c=>`<button class="cdot ${AO.color==c?'on':''}" style="background:${c}" onclick="pick('color','${c}')"></button>`).join('')}<label class="cdot" style="background:conic-gradient(#f87171,#facc15,#4ade80,#22d3ee,#818cf8,#f472b6,#f87171);position:relative"><input type="color" value="${AO.color}" oninput="setAO('color',this.value)" onchange="drawStudio()" style="opacity:0;position:absolute;inset:0;width:100%;height:100%"></label></div>
  <div class="row" style="display:block"><div>Clock size</div><input type="range" min="12" max="34" value="${AO.size}" oninput="setAO('size',+this.value)"></div>
  <div class="row" style="display:block"><div>Text size<small>Date, notifications and other text</small></div><input type="range" min="12" max="34" value="${AO.tsize}" oninput="setAO('tsize',+this.value)"></div>
- <div class="row" style="display:block"><div>Battery pill size</div><input type="range" min="60" max="170" value="${AO.bsize}" oninput="setAO('bsize',+this.value)"></div>
+ <div class="row" style="display:block"><div>Pill size<small>Battery, music and notification pills resize together (size and text)</small></div><input type="range" min="60" max="170" value="${AO.bsize}" oninput="setAO('bsize',+this.value)"></div>
+ <div class="row" style="display:block"><div>Music text size<small>Title and artist in the music pill</small></div><input type="range" min="60" max="180" value="${AO.mtsize}" oninput="setAO('mtsize',+this.value)"></div>
+ <div class="row" style="display:block"><div>Music buttons size<small>Previous, play/pause and next</small></div><input type="range" min="60" max="200" value="${AO.mbsize}" oninput="setAO('mbsize',+this.value)"></div>
  <div class="row" style="display:block"><div>Clock brightness<small>Lower is gentler on the eyes and the battery</small></div><input type="range" min="20" max="100" value="${AO.bright}" oninput="setAO('bright',+this.value)"></div>
  <h3 class="sec">Battery Pill Style</h3><div class="stl">${BSTY.map((n,i)=>`<button class="stc ${AO.bstyle==i?'on':''}" onclick="pick('bstyle',${i})"><div style="font-size:.42rem">${battHTML(.7234,true,0,i,true,100)}</div><small>${n}</small></button>`).join('')}</div>
  ${sw('sim','Preview as charging','Shows the charging animation in the preview above')}`}
@@ -838,15 +931,19 @@ const PK={sl:SCO,sr:SCO,date:[['top','Top'],['center','Under clock'],['bottom','
  shiftS:[[5,'Every 5 seconds'],[10,'Every 10 seconds'],[30,'Every 30 seconds'],[60,'Every minute'],[300,'Every 5 minutes'],[600,'Every 10 minutes']],
  offS:[[0,'Never'],[5,'After 5 seconds'],[10,'After 10 seconds'],[30,'After 30 seconds'],[60,'After 1 minute'],[300,'After 5 minutes'],[600,'After 10 minutes']]};
 const pr=(k,t,sub)=>{const o=PK[k].find(x=>x[0]==AO[k])||PK[k][0];return `<div class="row" onclick="pickAO('${k}','${t}')"><div>${t}${sub?`<small>${sub}</small>`:''}</div><span class="rv">${o[1]} ›</span></div>`};
-function pickAO(k,t){openPick(t,PK[k],AO[k],v=>{AO[k]=v;saveAO();drawStudio()})}
+const HRS=[...Array(24)].map((_,h)=>[h*60,String(h).padStart(2,'0')+':00']);PK.schS=HRS;PK.schE=HRS;
+function syncSched(){native('setAodSchedule',!!AO.sched,+AO.schS||0,+AO.schE||0)}
+function pickAO(k,t){openPick(t,PK[k],AO[k],v=>{AO[k]=v;saveAO();if(k=='schS'||k=='schE')syncSched();drawStudio()})}
 function settingsHTML(){
  return `${pr('date','Date position')}
  ${sw('h24','24-hour clock')}${sw('secs','Show seconds','Minimal, Gradient, Neon, Tall and Hairline styles')}
  ${sw('batt','Battery pill','Animated pill with percent (decimals are estimated between whole-percent steps) and charging time')}
  ${sw('notif','Notification pills','Stacked carousel. Needs Notification access on device')}
+ ${sw('npriv','Hide notification text','Pills show only the app name')}
  ${sw('glow','Edge glow on new notification','A soft coloured glow around the screen edge when something arrives')}
  ${sw('media','Music player controls','Track, artist and play controls. Needs Notification access on device')}
  ${sw('quote','Daily Vibe quote','A short motivational line each day')}
+ ${sw('sched','Only at night','Run the screen saver only between the times below')}${AO.sched?pr('schS','From')+pr('schE','Until'):''}
  ${sw('bg','Run on lock screen','Shows the AOD when the screen turns off. Needs Display over other apps')}
  ${sw('short','Quick shortcuts','Two buttons at the bottom of the screen')}
  ${pr('sl','Left shortcut')}${pr('sr','Right shortcut')}
@@ -866,7 +963,7 @@ function drawStudio(){const sc=$('studio').scrollTop,sbE=document.querySelector(
 applyTheme();
 ['splashLogo','consentLogo','topLogo'].forEach(i=>$(i).innerHTML=logoEl());
 if(AOD_MODE){$('splash').style.display='none';$('consent').style.display='none';startAod()}else{setTimeout(()=>{$('splash').classList.add('out');if(S.consent!==POLICY_VERSION)$('consent').style.display='flex'},1700);if(AO.bg)native('setBackground',true)}
-loadCatalog();syncNative();setTimeout(()=>{if((AO.notif||AO.media)&&!hasNA()&&!sessionStorage.getItem('naAsked')){sessionStorage.setItem('naAsked','1');askNA()}},2500);
+loadCatalog();syncNative();syncSched();setTimeout(()=>{if((AO.notif||AO.media)&&!hasNA()&&!sessionStorage.getItem('naAsked')){sessionStorage.setItem('naAsked','1');askNA()}},2500);
 addEventListener('resize',()=>{if($('aod').classList.contains('show'))tick();refreshPv()});
 </script>
 </body>
