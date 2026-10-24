@@ -1,6 +1,8 @@
 package com.zon.app;
 import android.app.Notification;
 import android.content.ComponentName;
+import android.content.Context;
+import android.os.Build;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.media.MediaMetadata;
@@ -14,12 +16,19 @@ import java.util.*;
 
 public class NotifService extends NotificationListenerService {
   static MediaController mc;
+  static NotifService inst;
+  static void sync(Context c) {
+    if (inst != null) { inst.push(); inst.send(); }
+    else if (Build.VERSION.SDK_INT >= 24) { try { requestRebind(new ComponentName(c, NotifService.class)); } catch (Exception e) {} }
+  }
+  @Override public void onListenerDisconnected() { if (inst == this) inst = null; }
   MediaController cur;
   final MediaController.Callback cb = new MediaController.Callback() {
     @Override public void onMetadataChanged(MediaMetadata m) { send(); }
     @Override public void onPlaybackStateChanged(PlaybackState p) { send(); }
   };
   @Override public void onListenerConnected() {
+    inst = this;
     push();
     try {
       MediaSessionManager m = (MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);

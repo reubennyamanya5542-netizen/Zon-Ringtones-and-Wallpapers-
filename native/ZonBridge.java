@@ -31,6 +31,11 @@ public class ZonBridge {
     Intent i = c.getPackageManager().getLaunchIntentForPackage(pkg);
     if (i != null) start(i); else toast("App not found");
   }
+  @JavascriptInterface public boolean hasNotifAccess() { String s = Settings.Secure.getString(c.getContentResolver(), "enabled_notification_listeners"); return s != null && s.contains(c.getPackageName()); }
+  @JavascriptInterface public void openNotifAccess() { start(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)); }
+  @JavascriptInterface public void syncNotifs() { NotifService.sync(c); }
+  @JavascriptInterface public void skipNext() { android.media.session.MediaController m = NotifService.mc; if (m != null) m.getTransportControls().skipToNext(); }
+  @JavascriptInterface public void skipPrev() { android.media.session.MediaController m = NotifService.mc; if (m != null) m.getTransportControls().skipToPrevious(); }
   @JavascriptInterface public void playPause() {
     android.media.session.MediaController m = NotifService.mc;
     if (m == null) return;
