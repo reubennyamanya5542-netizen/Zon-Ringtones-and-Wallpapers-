@@ -24,7 +24,8 @@ import java.net.URL;
 public class ZonBridge {
   final Activity a; final Context c;
   static int hookedId = -1;
-  ZonBridge(Activity act) { a = act; c = act.getApplicationContext(); hookBack(); }
+  static int audioHooked = -1;
+  ZonBridge(Activity act) { a = act; c = act.getApplicationContext(); hookBack(); hookAudio(); }
 
   WebView findWeb(View v) {
     if (v instanceof WebView) return (WebView) v;
@@ -93,6 +94,60 @@ public class ZonBridge {
     android.media.session.PlaybackState p = m.getPlaybackState();
     if (p != null && p.getState() == android.media.session.PlaybackState.STATE_PLAYING) m.getTransportControls().pause(); else m.getTransportControls().play();
   }
+  /** Where the sound goes right now: {"kind":"bt|wired|usb|hdmi|speaker","name":"JBL Flip 6"} */
+  @JavascriptInterface public String audioOutput() {
+    try {
+      AudioManager am = (AudioManager) c.getSystemService(Context.AUDIO_SERVICE);
+      android.media.AudioDeviceInfo best = null; int rank = -1;
+      for (android.media.AudioDeviceInfo d : am.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
+        int r = outRank(d.getType()); if (r > rank) { rank = r; best = d; }
+      }
+      if (best == null) return "";
+      String kind = outKind(best.getType()), name = "";
+      CharSequence pn = best.getProductName();
+      if (pn != null) name = pn.toString().trim();
+      boolean generic = name.isEmpty() || name.equalsIgnoreCase(Build.MODEL) || kind.equals("speaker");
+      if (generic) name = kind.equals("bt") ? "Bluetooth" : kind.equals("wired") ? "Headphones" : kind.equals("usb") ? "USB audio" : kind.equals("hdmi") ? "HDMI" : "Phone speaker";
+      return new org.json.JSONObject().put("kind", kind).put("name", name).toString();
+    } catch (Exception e) { return ""; }
+  }
+  static int outRank(int t) {
+    switch (t) {
+      case 8: case 26: case 27: case 23: return 6;   // Bluetooth A2DP / BLE / hearing aid
+      case 7: return 5;                              // Bluetooth SCO
+      case 3: case 4: return 5;                      // wired headset / headphones
+      case 11: case 22: return 4;                    // USB
+      case 9: return 3;                              // HDMI
+      case 2: return 2;                              // phone speaker
+      case 1: return 1;                              // earpiece
+      default: return 0;
+    }
+  }
+  static String outKind(int t) {
+    switch (t) {
+      case 8: case 26: case 27: case 23: case 7: return "bt";
+      case 3: case 4: return "wired";
+      case 11: case 22: return "usb";
+      case 9: return "hdmi";
+      default: return "speaker";
+    }
+  }
+  /** Tells the page whenever headphones or a Bluetooth speaker connect or disconnect. */
+  void hookAudio() {
+    if (audioHooked == System.identityHashCode(a)) return;
+    audioHooked = System.identityHashCode(a);
+    try {
+      AudioManager am = (AudioManager) c.getSystemService(Context.AUDIO_SERVICE);
+      am.registerAudioDeviceCallback(new android.media.AudioDeviceCallback() {
+        @Override public void onAudioDevicesAdded(android.media.AudioDeviceInfo[] d) { pushOutput(); }
+        @Override public void onAudioDevicesRemoved(android.media.AudioDeviceInfo[] d) { pushOutput(); }
+      }, new Handler(Looper.getMainLooper()));
+    } catch (Exception e) { }
+  }
+  void pushOutput() {
+    WebView w = findWeb(a.getWindow().getDecorView());
+    if (w != null) w.evaluateJavascript("window.zonSetOutput&&zonSetOutput(" + org.json.JSONObject.quote(audioOutput()) + ")", null);
+  }
   @JavascriptInterface public int getVolume() {
     try { AudioManager am = (AudioManager) c.getSystemService(Context.AUDIO_SERVICE); int mx = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC); return mx > 0 ? Math.round(am.getStreamVolume(AudioManager.STREAM_MUSIC) * 100f / mx) : 0; }
     catch (Exception e) { return 0; }
@@ -160,6 +215,17 @@ public class ZonBridge {
       RingtoneManager.setActualDefaultRingtoneUri(c, type, u);
       toast("Done");
     } catch (Exception ex) { toast("Failed: " + ex.getMessage()); } }).start();
+  }
+  @JavascriptInterface public void startWallRotate(String urls, int mins, String where, boolean wifiOnly) {
+    c.getSharedPreferences("zonwall", android.content.Context.MODE_PRIVATE).edit().putString("urls", urls).putString("where", where).putInt("i", -1).apply();
+    android.app.job.JobScheduler js = (android.app.job.JobScheduler) c.getSystemService(android.content.Context.JOB_SCHEDULER_SERVICE);
+    js.cancel(4242);
+    js.schedule(new android.app.job.JobInfo.Builder(4242, new android.content.ComponentName(c, WallJob.class))
+      .setPeriodic(Math.max(15, mins) * 60000L).setPersisted(true)
+      .setRequiredNetworkType(wifiOnly ? android.app.job.JobInfo.NETWORK_TYPE_UNMETERED : android.app.job.JobInfo.NETWORK_TYPE_ANY).build());
+  }
+  @JavascriptInterface public void stopWallRotate() {
+    ((android.app.job.JobScheduler) c.getSystemService(android.content.Context.JOB_SCHEDULER_SERVICE)).cancel(4242);
   }
   @JavascriptInterface public void setWallpaper(String id, String where, String url, String b64) {
     new Thread(() -> { try {
