@@ -201,8 +201,8 @@ nav button.on{color:#C7D2FE}
 .quick button:nth-child(4){--q1:#F9A8D4;--q2:#E11D48}
 .act svg.i{flex:none;width:2.25rem;height:2.25rem;padding:.55rem;border-radius:.8rem;color:var(--pri2);background:linear-gradient(145deg,#6366F133,#38BDF820);box-shadow:inset 0 0 0 1px #ffffff14}
 .act.del svg.i{color:#F87171;background:#F8717122}
-.cov .pl{background:linear-gradient(145deg,#6366F1cc,#0b0f19cc);box-shadow:0 0 0 1px #ffffff33,0 .2rem .6rem #0008;backdrop-filter:blur(.3rem)}
-.heart{backdrop-filter:blur(.35rem);box-shadow:inset 0 0 0 1px #ffffff2a}
+.cov .pl{background:linear-gradient(145deg,#6366F1cc,#0b0f19cc);box-shadow:0 0 0 1px #ffffff33,0 .2rem .6rem #0008}
+.heart{box-shadow:inset 0 0 0 1px #ffffff2a}
 .btn{box-shadow:inset 0 1px 0 #ffffff55,0 .6rem 1.6rem #4F46E566}
 .sw.on{background:linear-gradient(135deg,#818CF8,#38BDF8);box-shadow:0 0 .6rem #6366F188}
 .top .ib svg.i{color:var(--pri2)}
@@ -307,7 +307,9 @@ svg.i .duo{fill-rule:evenodd}
 .grab{width:2.6rem;height:.3rem;border-radius:1rem;background:#fff6;margin:0 auto .6rem;padding:.5rem 0;background-clip:content-box}
 .mpart{aspect-ratio:1;border-radius:1.1rem;background:linear-gradient(135deg,#ef4444,#7c3aed);box-shadow:0 1.5rem 3rem #0008;transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
 #mp.pz .mpart{transform:scale(.84)}
-.mpt b{display:block;font-size:1.3rem}.mpt span{opacity:.6;font-size:1.1rem}
+.mpt{min-width:0;overflow:hidden}.mpt b{display:block;font-size:1.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mpt span{display:block;opacity:.6;font-size:.9rem;margin-top:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mpout{display:none;align-items:center;justify-content:center;gap:.45rem;align-self:center;margin-top:-.2rem;padding:.35rem .8rem;border-radius:2rem;background:#ffffff14;font-size:.78rem;color:#34D399;max-width:100%}
+.mpout svg{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.mpout span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mpout i{font-style:normal;opacity:.7;color:#fff}
 .mps{height:.4rem;border-radius:1rem;background:#fff3;overflow:hidden;cursor:pointer}.mps i{display:block;height:100%;background:#fffd;border-radius:1rem}
 .mptm{display:flex;justify-content:space-between;font-size:.75rem;opacity:.6;margin-top:-.6rem}
 .mpctl{display:flex;justify-content:center;align-items:center;gap:2.6rem}.mpctl svg{width:2.6rem;height:2.6rem;fill:#fff}.mpctl .pp svg{width:3.6rem;height:3.6rem}
@@ -388,6 +390,12 @@ main.skel .item .t{filter:blur(.3rem);opacity:.5}
 @keyframes sks{to{transform:translateX(100%)}}
 main.fin{animation:fin .35s ease}
 @keyframes fin{from{opacity:0}}
+/* no orange focus ring (Android shows it after a screenshot key press), faster taps, list loader */
+*:focus,*:focus-visible,button:focus,button:focus-visible,[tabindex]:focus,[tabindex]:focus-visible{outline:none!important}
+html,body,button,.card,.item{touch-action:manipulation}
+.more{height:3.4rem;display:grid;place-items:center;color:var(--mut);font-size:.78rem;animation:morePulse 1.1s ease-in-out infinite alternate}
+@keyframes morePulse{from{opacity:.35}to{opacity:1}}
+.alist .item{content-visibility:auto;contain-intrinsic-size:auto 4.6rem}
 </style>
 </head>
 <body>
@@ -403,7 +411,7 @@ main.fin{animation:fin .35s ease}
     <div class="legal">
       <p style="margin-top:0"><b>Before you continue</b></p>
       <p>Zon saves the sounds and wallpapers you download on your device so they work offline. No account is needed.</p>
-      <p>Google AdMob may use an advertising identifier to show banner ads, and basic crash data may be collected to keep the app stable. Permissions such as system settings, notifications, Bluetooth and overlay are asked only when you turn on a feature that needs them.</p>
+      <p>Zon shows no ads and collects no analytics. Notification text is read and shown only on your phone and is never uploaded. If you turn on weather, only the city you choose is sent to Open-Meteo. Permissions such as system settings, notifications, Bluetooth and overlay are asked only when you turn on a feature that needs them.</p>
       <p style="margin-bottom:0">By tapping Agree and Continue you accept our <a class="link" onclick="openSub('privacy')">Privacy Policy</a> and <a class="link" onclick="openSub('terms')">Terms of Use</a>.</p>
     </div>
     <button class="btn" onclick="agree()">Agree and Continue</button>
@@ -412,7 +420,7 @@ main.fin{animation:fin .35s ease}
 
   <div class="top" id="top">
     <div class="lg" id="topLogo"></div>
-    <label class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" placeholder="Search Zon" oninput="Q=this.value;explore()"></label>
+    <label class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" placeholder="Search Zon" oninput="Q=this.value;clearTimeout(qT);qT=setTimeout(explore,150)"></label>
   </div>
   <div class="tabs" id="tabs"></div>
   <main id="main"></main>
@@ -432,7 +440,7 @@ main.fin{animation:fin .35s ease}
 <div class="mpt"><b id="mpTi">Nothing playing</b><span id="mpAr"></span></div>
 <div class="mps" onclick="mpSeek(event)"><i id="mpbar"></i></div><div class="mptm"><span id="mpa"></span><span id="mpb"></span></div>
 <div class="mpctl"><svg viewBox="0 0 24 24" onclick="native('skipPrev')"><path d="M11 6v12L2 12zM22 6v12l-9-6z"/></svg><span class="pp" onclick="mpPlay()"><svg id="mpp" viewBox="0 0 24 24"></svg></span><svg viewBox="0 0 24 24" onclick="native('skipNext')"><path d="M13 6v12l9-6zM2 6v12l9-6z"/></svg></div>
-<div class="mpvol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/></svg><input type="range" id="mpVol" min="0" max="100" value="70" oninput="mpSetVol(+this.value)"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9zM15 8a5 5 0 010 8M17.5 5a9 9 0 010 14" style="stroke:#fff9;stroke-width:2;fill:#fff9"/></svg></div></div>
+<div class="mpvol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/></svg><input type="range" id="mpVol" min="0" max="100" value="70" oninput="mpSetVol(+this.value)"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9zM15 8a5 5 0 010 8M17.5 5a9 9 0 010 14" style="stroke:#fff9;stroke-width:2;fill:#fff9"/></svg></div><div class="mpout" id="mpOut"></div></div>
 <div class="mptray" id="mptray"></div>
 <div class="mpft"><button data-t="bg" onclick="mpTrayOpen('bg')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>Background</button><button data-t="card" onclick="mpTrayOpen('card')"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="4"/></svg>Card</button><button data-t="blur" onclick="mpTrayOpen('blur')"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.2 6 10.5A6 6 0 016 13.5C6 9.2 12 3 12 3z"/></svg>Blur</button></div></div>
 <input type="file" id="mpPhotoIn" accept="image/*" style="display:none" onchange="mpPhoto(this)"></div>
@@ -486,11 +494,27 @@ let CAT={a:[],w:[],feat:[],cols:[]},ALL={};
 const GR=['#7c3aed,#db2777','#0ea5e9,#4F46E5','#f97316,#be185d','#10b981,#0e7490','#f59e0b,#ef4444','#6366F1,#0f172a','#14b8a6,#1e1b4b','#ec4899,#8b5cf6'];
 const grad=i=>`linear-gradient(${150+i*17}deg,${GR[i%GR.length]})`;
 const DEMO={audio:[],wallpapers:[]};
+let CAT_RAW='',catAt=0;
 async function loadCatalog(){
- let data=null,base=CATALOG_URL.replace(/[^/]*$/,'');
- try{const r=await fetch(CATALOG_URL,{cache:'no-cache'});if(!r.ok)throw 0;data=await r.json();localStorage.setItem('zonCat',JSON.stringify({d:data,b:base}))}
- catch(e){try{const c=JSON.parse(localStorage.getItem('zonCat'));if(c&&c.d){data=c.d;base=c.b}}catch(_){}}
- build(data||DEMO,base)}
+ const base=CATALOG_URL.replace(/[^/]*$/,'');let have=false;
+ try{const c=JSON.parse(localStorage.getItem('zonCat'));if(c&&c.d){have=true;CAT_RAW=JSON.stringify(c.d);build(c.d,c.b||base)}}catch(e){}
+ if(!have)build(DEMO,base);await fetchCatalog(!have)}
+/* Checks for new wallpapers and ringtones. Quiet: only redraws when something really changed. */
+async function fetchCatalog(first){
+ const base=CATALOG_URL.replace(/[^/]*$/,'');
+ try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),8000);const r=await fetch(CATALOG_URL,{cache:'no-cache',signal:ac.signal});clearTimeout(tm);if(!r.ok)throw 0;const d=await r.json();catAt=Date.now();const raw=JSON.stringify(d);
+  if(raw!==CAT_RAW){CAT_RAW=raw;try{localStorage.setItem('zonCat',JSON.stringify({d,b:base}))}catch(e){}
+   if(first)build(d,base);else applyFresh(d,base)}
+  return true}catch(e){return false}}
+function applyFresh(d,base){const m=$('main'),st=m.scrollTop,pg=PAGE,n0=CAT.a.length+CAT.w.length;build(d,base);
+ if(tab=='explore'){PAGE=pg;explore(true);m.scrollTop=st}
+ if(CAT.a.length+CAT.w.length>n0)toast('New content added')}
+let autoSkip=0;
+function autoRefresh(){if(document.hidden||RF||tab=='set')return;
+ if(['view','sheet','dlg','sub','studio','aod','mp'].some(i=>{const e=$(i);return e&&e.classList.contains('show')}))return;fetchCatalog(false)}
+setInterval(()=>{if(!S.saver||++autoSkip%3==0)autoRefresh()},120000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-catAt>45000)autoRefresh()});
+addEventListener('online',autoRefresh);
 function build(d,base){
  const abs=u=>!u?'':(/^(https?:|data:|blob:)/.test(u)?u:base+u.replace(/^\.?\//,''));
  const FQ=[[523,659,784],[392,523,659],[880,660,880],[330,440,330],[440,554,659],[349,440,523]];
@@ -507,7 +531,7 @@ function build(d,base){
  render()}
 
 /* ---------- Media (cache-first so the vault works offline) ---------- */
-function art(it){const u=it.type=='w'?(it.thumb||it.url):(it.thumb);return `<div class="art" style="background:${it.g}">${u?`<img data-u="${u}" alt="" loading="lazy">`:''}</div>`}
+function art(it){const u=it.type=='w'?(it.thumb||it.url):(it.thumb);return `<div class="art" style="background:${it.g}">${u?`<img data-u="${u}" alt="" loading="lazy" decoding="async">`:''}</div>`}
 function hydrate(root=document){root.querySelectorAll('img[data-u]:not([data-h])').forEach(img=>{img.dataset.h=1;const u=img.dataset.u;img.onerror=()=>img.remove();
  if(window.caches)caches.match(u).then(r=>r?r.blob().then(b=>img.src=URL.createObjectURL(b)):img.src=u).catch(()=>img.src=u);else img.src=u})}
 async function srcOf(u){if(window.caches){try{const r=await caches.match(u);if(r)return URL.createObjectURL(await r.blob())}catch(e){}}return u}
@@ -528,16 +552,24 @@ function render(){
  ({explore,vault,fav,set}[tab])();}
 function go(t){if(t=='aod'){openStudio();return}tab=t;render()}
 function setKind(k){kind=k;chip='All';render()}
-function heartBtn(it){return `<button class="heart ${S.fav.includes(it.id)?'on':''}" onclick="event.stopPropagation();toggleFav('${it.id}')">${ic(I.heart)}</button>`}
+function heartBtn(it){return `<button class="heart ${S.fav.includes(it.id)?'on':''}" data-fid="${it.id}" onclick="event.stopPropagation();toggleFav('${it.id}')">${ic(I.heart)}</button>`}
 function savedBadge(it){return S.dl.includes(it.id)?`<span class="saved">${ic(I.check)}</span>`:''}
 function wcard(it,cls,ctx){return `<div class="card ${cls}" onclick="wallView('${it.id}','${ctx||''}')">${art(it)}${savedBadge(it)}${heartBtn(it)}</div>`}
 function arow(it,mode){return `<div class="item"><div class="cov" style="background:${it.g}" onclick="playItem(ALL['${it.id}'])">${art(it)}<span class="pl">${ic(I.play)}</span></div>
  <div class="t" onclick="${mode=='vault'?`sheet('${it.id}')`:`audioView('${it.id}')`}"><b>${it.title}</b><small>${it.cat}${it.dur?' · '+it.dur:''}</small></div>
- ${mode=='vault'?`<button class="ib" onclick="sheet('${it.id}')">${ic(I.more)}</button>`:`<button class="ib ${S.fav.includes(it.id)?'on':''}" onclick="toggleFav('${it.id}')">${ic(I.heart)}</button><button class="ib ${S.dl.includes(it.id)?'ok':''}" onclick="download('${it.id}')">${ic(S.dl.includes(it.id)?I.check:I.dl)}</button>`}</div>`}
+ ${mode=='vault'?`<button class="ib" onclick="sheet('${it.id}')">${ic(I.more)}</button>`:`<button class="ib ${S.fav.includes(it.id)?'on':''}" data-fid="${it.id}" onclick="toggleFav('${it.id}')">${ic(I.heart)}</button><button class="ib ${S.dl.includes(it.id)?'ok':''}" onclick="download('${it.id}')">${ic(S.dl.includes(it.id)?I.check:I.dl)}</button>`}</div>`}
 const WCATS=['AMOLED','Trending','Cars','Nature','Anime','Aesthetic','Abstract','Space','Gaming','Minimal','Dark','Gradient','Neon','Architecture','Animals','Art','Black and White','Cities','Beach','Mountains','Forest','Sunset','Sky','Flowers','Food','Fashion','Travel','Quotes','Motivation','Memes','Sports','Football','Cricket','Superheroes','Movies','Music','Technology','Cartoon','Cute','Love','Vintage','Pattern','3D','Street','Bikes','Luxury','Islamic','Spiritual','Festivals','Holiday','Couples','Friends','Funny','Illustration','Fantasy','Sci-Fi','Horror','Wildlife','Underwater','Rain','Winter','Autumn','Spring','Summer','Texture','Marble','Typography','Pixel Art','Retro','Cyberpunk','Pastel','Supercars','Sports Cars','Classic Cars','Bikes and Motorcycles','Trucks','Airplanes','Trains','Ships and Boats','Racing and F1','Landscapes','Beaches and Ocean','Waterfalls','Sunset and Sunrise','Sky and Clouds','Winter and Snow','Desert','Lakes and Rivers','Space and Galaxy','Moon and Stars','Planets','Northern Lights','Dogs','Cats','Birds','Lions and Tigers','Horses','Butterflies and Insects','Games','TV Shows','Celebrities','K-pop','Basketball','Boxing and MMA','Gym and Fitness','Tennis','Olympics','Love and Romance','Friendship','Family','Kids','Baby','Wedding','Food and Drinks','Coffee','Cities and Night','Watches','Jewelry','Letters and Names','Spiritual and Faith','Success and Money','Sad and Alone','Art and Painting','3D and CGI','Digital Art','Futuristic','Lo-fi','Vintage and Retro','Patterns and Textures','Geometric','Glass and Blur','Liquid and Fluid','Fire and Water','Smoke and Light','Fireworks','Horror and Dark Art','Skulls','Gothic','Villains','Emoji','Kawaii','WhatsApp DP','Profile Pictures','Status and Stories','Festivals and Holidays','Christmas','Ramadan and Eid','Halloween','New Year','Valentine'];
 const ACATS=['Trending','Instrumental','Bollywood','Hip-Hop','Lo-fi','Phonk','EDM','Classical','Piano','Guitar','Flute','Notification','Alarm','SMS Tone','Nature Sounds','Islamic','Devotional','Romantic','Sad','Movie BGM','Phone Rings','Vintage Phone','Love Songs','Hindi','Tamil','Telugu','Punjabi','Malayalam','Kannada','English','K-Pop','Motivation','Memes','Funny','Viral','Classic Ring','Old Phone','Retro 8-bit','Bells','Whistle','Sci-Fi','Horror and Spooky','Anime and Game','Movie Themes','TV Themes','Violin','Drums and Percussion','Orchestral','Cinematic','Pop','Rock','R and B','Jazz','Blues','Country','Reggae','Afrobeats','Amapiano','Latin','Gospel and Worship','Nasheed and Islamic','Notification Pings','Message Tones','Email and Chat','Short Beeps','Voice Alerts','Alarm Clocks','Wake Up','Gentle Alarm','Loud Alarm','Morning Birds','Meditation','Sleep','Rain and Ocean','Birds','White Noise','ASMR','Love and Romantic','Happy','Chill','Epic','Sports and Gym','Sound Effects','Funny Voices','Animals','Cartoon','Kids','Baby','Name Ringtones'];
 function chipsHTML(list){const fixed=kind=='a'?ACATS:WCATS;const cs=['All',...new Set([...fixed,...list.map(x=>x.cat)])];return `<div class="chips">${cs.map(c=>`<button class="chip ${c==chip?'on':''}" onclick="chip='${c}';explore()">${c}</button>`).join('')}</div>`}
-function explore(){
+let PAGE=1,EXPL=[],qT=null,moreIO=null;
+const PSTEP=()=>kind=='a'?30:24;
+function watchMore(){if(moreIO){moreIO.disconnect();moreIO=null}const m=$('more');if(!m||!('IntersectionObserver' in window))return;
+ moreIO=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))loadMore()},{root:$('main'),rootMargin:'0px 0px 900px 0px'});moreIO.observe(m)}
+function loadMore(){const box=$('plist'),m=$('more');if(!box||!m)return;const from=PAGE*PSTEP();PAGE++;const to=PAGE*PSTEP();
+ box.insertAdjacentHTML('beforeend',EXPL.slice(from,to).map(x=>kind=='a'?arow(x,'explore'):wcard(x,'','list')).join(''));hydrate(box);
+ if(to>=EXPL.length){m.remove();if(moreIO){moreIO.disconnect();moreIO=null}}else{moreIO.unobserve(m);moreIO.observe(m)}}
+function explore(keep){
+ if(!keep)PAGE=1;
  const base=kind=='a'?CAT.a:CAT.w,q=Q.trim().toLowerCase();
  let list=base.filter(x=>(chip=='All'||x.cat==chip)&&(!q||(x.type=='a'&&x.title.toLowerCase().includes(q))||x.cat.toLowerCase().includes(q)));
  if(sortNew)list=[...list].reverse();
@@ -553,9 +585,13 @@ function explore(){
   if(CAT.cols.length)h+=`<h3 class="sec">Popular Collections</h3><div class="hs">${CAT.cols.map(c=>`<div class="card c" style="--b:${c.color}" onclick="chip='${c.name}';explore()">${art(c.items[0])}<div class="lab">${c.name}</div></div>`).join('')}</div>`;
   h+=`<h3 class="sec">Popular</h3>`}
  else{h+=chipsHTML(base);if(sortNew)h+=`<h3 class="sec" style="margin-top:0">Newest <button class="link" style="font-size:0.8125rem" onclick="sortNew=false;explore()">Clear</button></h3>`}
- h+=list.length?(kind=='a'?`<div class="alist">${list.map(x=>arow(x,'explore')).join('')}</div>`:`<div class="grid">${list.map(x=>wcard(x,'','list')).join('')}</div>`):`<div class="empty">Nothing found.</div>`;
+ EXPL=list;const lim=PAGE*PSTEP(),shown=list.slice(0,lim);
+ h+=list.length?(kind=='a'?`<div class="alist" id="plist">${shown.map(x=>arow(x,'explore')).join('')}</div>`:`<div class="grid" id="plist">${shown.map(x=>wcard(x,'','list')).join('')}</div>`)+(list.length>lim?'<div class="more" id="more">Loading more\u2026</div>':''):`<div class="empty">Nothing found.</div>`;
  if(kind=='w'&&!q&&chip=='All'&&base.length)h+=`<h3 class="sec">WhatsApp DPs &amp; contact avatars</h3><div class="hs">${base.slice(0,8).map(it=>`<div class="card f" style="width:6.875rem;height:6.875rem" onclick="wallView('${it.id}','dp')">${art(it)}</div>`).join('')}</div>`;
- $('main').innerHTML=h;hydrate($('main'))}
+ const oc=$('main').querySelector('.chips'),osl=oc?oc.scrollLeft:0;
+ $('main').innerHTML=h;hydrate($('main'));
+ const nc=$('main').querySelector('.chips');if(nc){nc.scrollLeft=osl;const on=nc.querySelector('.on');if(on){const r=on.getBoundingClientRect(),cr=nc.getBoundingClientRect();if(r.left<cr.left||r.right>cr.right)nc.scrollLeft+=r.left-cr.left-(cr.width-r.width)/2}}
+ watchMore()}
 function seg2(cur,a,b,fn){return `<div class="chips" style="margin-bottom:0.375rem"><button class="chip ${cur=='a'?'on':''}" onclick="${fn}('a')">${a}</button><button class="chip ${cur=='w'?'on':''}" onclick="${fn}('w')">${b}</button></div>`}
 function vault(){const ids=S.dl.map(id=>ALL[id]||S.meta[id]).filter(x=>x&&x.type==vkind);
  $('main').innerHTML=`<h2 style="margin:0.375rem 0.125rem 0.625rem">Offline Vault</h2>`+seg2(vkind,'Saved Audio','Saved Wallpapers','setV')+(ids.length?(vkind=='a'?`<div class="alist">${ids.map(x=>arow(x,'vault')).join('')}</div>`:`<div class="grid">${ids.map(x=>`<div class="card" onclick="sheet('${x.id}')">${art(x)}</div>`).join('')}</div>`):`<div class="empty">Your vault is empty.<br>Download items from Explore to keep them offline.</div>`);hydrate($('main'))}
@@ -570,7 +606,14 @@ function set(){const tn={dark:'Dark',light:'Light',system:'System Default'}[S.th
  <div class="row"><div>Local cache<small>${cacheMB()} MB used · ${S.dl.length} items</small></div><button class="chip on" onclick="clearCache()">Clear Offline Cache</button></div>
  <div class="row"><div>Back up<small>Save favorites and screen saver settings to a file</small></div><button class="chip on" onclick="backupData()">Back up</button></div>
  <div class="row"><div>Restore<small>Load a Zon backup file</small></div><button class="chip on" onclick="$('bkIn').click()">Restore</button><input type="file" id="bkIn" accept=".json,application/json" style="display:none" onchange="restoreData(this)"></div>
+ ${wrUI()}
  <div class="sfoot"><a onclick="openSub('about')">About Zon</a>·<a onclick="openSub('privacy')">Privacy Policy</a>·<a onclick="openSub('terms')">Terms of Use</a><div>Zon v20.34.12</div></div></div>`}
+function wrList(){const w=S.wr.src=='fav'?S.fav.map(id=>ALL[id]||S.meta[id]).filter(x=>x&&x.type=='w'):CAT.w;return w.slice(0,60).map(x=>x.url).filter(u=>/^https?:/.test(u))}
+function wrApply(){const r=S.wr;save();if(!r.on){native('stopWallRotate');set();return}const urls=wrList();
+ if(urls.length<2){r.on=false;save();set();toast(r.src=='fav'?'Favourite at least 2 wallpapers first':'Not enough wallpapers online yet');return}
+ if(native('startWallRotate',JSON.stringify(urls),r.mins,r.where,!!r.wifi))toast('Wallpaper will change every '+(r.mins>=60?r.mins/60+' h':r.mins+' min'));else{r.on=false;save();toast('Works only in the installed app')}set()}
+const wrChips=(k,list)=>list.map(([v,l])=>`<button class="chip ${S.wr[k]==v?'on':''}" onclick="S.wr.${k}=${typeof v=='string'?`'${v}'`:v};wrApply()">${l}</button>`).join('');
+function wrUI(){const r=S.wr;return `<div class="row"><div>Auto-change wallpaper<small>${r.on?'On. Android may delay a few minutes to save battery':'Changes your wallpaper by itself'}</small></div><div class="sw ${r.on?'on':''}" onclick="S.wr.on=!S.wr.on;wrApply()"></div></div>`+(r.on?`<div class="row"><div>Every</div><div>${wrChips('mins',[[15,'15 min'],[60,'1 h'],[360,'6 h'],[1440,'Daily']])}</div></div><div class="row"><div>Use</div><div>${wrChips('src',[['fav','Favourites'],['all','All']])}</div></div><div class="row"><div>Apply to</div><div>${wrChips('where',[['home','Home'],['lock','Lock'],['both','Both']])}</div></div><div class="row"><div>Wi-Fi only<small>Saves your mobile data</small></div><div class="sw ${r.wifi?'on':''}" onclick="S.wr.wifi=!S.wr.wifi;wrApply()"></div></div>`:'')}
 function backupData(){const keep={};S.fav.forEach(id=>{if(S.meta[id])keep[id]=S.meta[id]});let mine=null;try{mine=JSON.parse(localStorage.getItem('zonAodMine')||'null')}catch(e){}
  const txt=JSON.stringify({zon:1,S:{fav:S.fav,meta:keep,theme:S.theme,saver:S.saver},AO,mine}),name='zon-backup.json';
  if(!native('saveText',name,txt)){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;a.click();toast('Backup saved')}}
@@ -664,7 +707,7 @@ function audioView(id){const it=ALL[id];tS=0;tE=100;trimId=id;
 function shareIt(id){const it=ALL[id]||S.meta[id],t=`${it.type=='a'?it.title:'A wallpaper'} on Zon`+(it.url&&/^https?:/.test(it.url)?` ${it.url}`:'');if(!native('share',t))window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}
 
 /* ---------- Actions ---------- */
-function toggleFav(id){const it=ALL[id];S.fav=S.fav.includes(id)?S.fav.filter(x=>x!=id):[...S.fav,id];if(S.fav.includes(id))S.meta[id]=S.meta[id]||it;save();if(!$('view').classList.contains('show'))render();else if(tab=='explore')explore()}
+function toggleFav(id){const it=ALL[id];S.fav=S.fav.includes(id)?S.fav.filter(x=>x!=id):[...S.fav,id];if(S.fav.includes(id))S.meta[id]=S.meta[id]||it;save();const on=S.fav.includes(id),vo=$('view').classList.contains('show');document.querySelectorAll(`[data-fid="${id}"]`).forEach(b=>b.classList.toggle('on',on));if(tab=='fav'&&!vo)render();else if(vo&&tab=='explore')explore(true)}
 async function download(id){if(S.dl.includes(id)){toast('Already in your vault');return}
  const it={...ALL[id]};
  if(it.type=='w'&&S.saver&&it.thumb)it.url=it.thumb;
@@ -725,7 +768,7 @@ function agree(){S.consent=POLICY_VERSION;save();$('consent').style.display='non
 function decline(){toast('Zon needs your agreement to run');native('exitApp')}
 
 /* ---------- AOD Studio (customizable screen saver / always-on display) ---------- */
-const AO_DEF={fill:false,fmode:0,style:0,font:0,color:'#F9FAFB',size:20,bright:100,date:'top',batt:true,bstyle:0,bsize:100,tfont:0,tsize:20,sl:'flash',sr:'cam',sim:false,notif:true,media:false,quote:false,h24:true,secs:false,shiftS:30,offS:0,dbl:true,short:true,rot:true,glow:true,mpbg:'def',mpcard:0,mpblur:24,mtsize:100,mbsize:100,sched:false,schS:1320,schE:360,npriv:false};
+const AO_DEF={fill:false,fmode:0,style:0,font:0,color:'#F9FAFB',size:20,bright:100,date:'top',batt:true,bstyle:0,bsize:100,tfont:0,tsize:20,fnOrder:'ta',sl:'flash',sr:'cam',sim:false,notif:true,media:false,quote:false,h24:true,secs:false,shiftS:30,offS:0,dbl:true,short:true,rot:true,glow:true,mpbg:'def',mpcard:0,mpblur:24,mtsize:100,mbsize:100,sched:false,schS:1320,schE:360,npriv:false};
 let AO={...AO_DEF};try{Object.assign(AO,JSON.parse(localStorage.getItem('zonAod')||'{}'))}catch(e){}
 if(AO.widget)AO.batt=true;['widget','viz','off','shift'].forEach(k=>delete AO[k]);
 if(!AO.v){AO.short=true;AO.v=2}
@@ -800,12 +843,36 @@ const nK=()=>{const n=NOTIFS.length;return n?(((Math.floor(Date.now()/5000)+nOff
 const DEMO_N=[['D','#3B82F6','Download Manager','index.html: Download complete.','22:39',''],['M','#10B981','Messages','Hey, are we still on for tonight?','22:31','']];
 function nStack(pv){const L=(!NOTIFS.length&&pv)?DEMO_N:NOTIFS,n=L.length,k=pv?0:nK();if(!n)return '';return `<div class="nst">${[2,1,0].filter(j=>j<n).map(j=>{const x=L[(k+j)%n];return `<div class="np k${j}"><i style="background:${x[1]}">${x[0]}</i><div><b>${x[2]}</b><small>${AO.npriv?'New notification':x[3]}</small></div><em>${x[4]}</em></div>`}).join('')}</div>`}
 let mpT=null,mpP=true,mpS=0,MPD=0,MT=null;const esc=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),mpF=s=>Math.floor(s/60)+':'+pad(Math.floor(s%60));
-function mpDraw(){mpApply();$('mpbar').style.width=(MPD?mpS/MPD*100:0)+'%';$('mpTi').textContent=MT?MT.title:'Nothing playing';$('mpAr').textContent=MT?MT.artist:'';const ar=document.querySelector('.mpart');if(ar)ar.style.background=MT&&MT.art?`url(${MT.art}) center/cover`:'';$('mpa').textContent=mpF(mpS);$('mpb').textContent='-'+mpF(MPD-mpS);$('mpp').innerHTML=`<path d="${mpP?FP.pause:FP.play}"/>`;$('mp').classList.toggle('pz',!mpP)}
-function openMP(){if(!MT||!$('aod').classList.contains('show'))return;$('mp').classList.add('show');mpDraw();mpVolSync();clearInterval(mpT);mpT=setInterval(()=>{mpVolSync();if(mpP&&MPD){mpS=Math.min(MPD,mpS+1);mpDraw()}},1000)}
+function mpDraw(){mpApply();$('mpbar').style.width=(MPD?mpS/MPD*100:0)+'%';$('mpTi').textContent=MT?MT.title:'Nothing playing';$('mpAr').textContent=MT?MT.artist:'';const ar=document.querySelector('.mpart');if(ar)ar.style.background=MT&&MT.art?`url(${MT.art}) center/cover`:'';$('mpa').textContent=mpF(mpS);$('mpb').textContent='-'+mpF(MPD-mpS);$('mpp').innerHTML=`<path d="${mpP?FP.pause:FP.play}"/>`;$('mp').classList.toggle('pz',!mpP);mpOutDraw()}
+function openMP(){if(!MT||!$('aod').classList.contains('show'))return;$('mp').classList.add('show');mpDraw();mpVolSync();mpOutRefresh();clearInterval(mpT);mpT=setInterval(()=>{mpVolSync();if(mpP&&MPD){mpS=Math.min(MPD,mpS+1);mpDraw()}},1000)}
 function closeMP(){$('mp').classList.remove('show');clearInterval(mpT)}
 function mpPlay(){native('playPause');mpP=!mpP;mpDraw();if($('aod').classList.contains('show'))tick()}
 /* Native app: zonSetTrack({title,artist,art,playing,pos,dur}) or zonSetTrack(null) when nothing plays */
-window.zonSetTrack=t=>{MT=t||null;mpP=!!(t&&t.playing!==false);mpS=t&&t.pos||0;MPD=t&&t.dur||0;if(!MT)closeMP();else if($('mp').classList.contains('show'))mpDraw();if($('aod').classList.contains('show'))tick()}
+/* ----- Song names: turn Song_-_Artist_[OFFICIAL_VIDEO]_@channel(256k).mp3 into "Song" + small "Artist" ----- */
+const FN_JUNK=/\b(official|lyrics?|lyric video|music video|video|audio|visuali[sz]er|hd|4k|mv|hq|full song|explicit)\b/i;
+const fnCase=x=>x.replace(/\S+/g,w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());
+const fnUnknown=a=>!a||/^(<unknown>|unknown( artist)?|null|undefined)$/i.test(String(a).trim());
+const fnLooksFile=r=>/\.(mp3|m4a|aac|wav|flac|ogg|opus|wma)$/i.test(r)||/_/.test(r)||/@\w/.test(r)||/\(\s*\d{2,3}\s*k(bps)?\s*\)/i.test(r)||/[\[(][^\])]*(official|lyric|video|audio)[^\])]*[\])]/i.test(r);
+function fnParse(raw){
+ let s=String(raw||'').replace(/\.(mp3|m4a|aac|wav|flac|ogg|opus|wma)$/i,'').replace(/_/g,' ');
+ s=s.replace(/\(\s*\d{2,3}\s*k(bps)?\s*\)/ig,'').replace(/@[\w.]+/g,'').replace(/[\[(][^\])]*[\])]/g,m=>FN_JUNK.test(m)?'':m);
+ s=s.replace(/_/g,' ').replace(/\s+/g,' ').trim().replace(/^[-\u2013\u2014\s]+|[-\u2013\u2014\s]+$/g,'');
+ let parts=s.split(/\s+[-\u2013\u2014]\s+/).map(x=>x.trim()).filter(Boolean);
+ const fix=x=>x&&x===x.toUpperCase()&&/[A-Z]/.test(x)?fnCase(x):x;
+ if(parts.length>=2){const t=AO.fnOrder=='at'?parts[1]:parts[0],a=AO.fnOrder=='at'?parts[0]:parts.slice(1).join(' - ');return{title:fix(t),artist:fix(a)}}
+ return{title:fix(s||String(raw||'')),artist:''}}
+function cleanTrack(t){
+ const o=Object.assign({},t);if(fnUnknown(o.artist))o.artist='';
+ if(!o.artist||fnLooksFile(String(o.title||''))){const r=fnParse(o.title);o.title=r.title||o.title;if(r.artist)o.artist=r.artist}
+ return o}
+/* ----- Where the sound is going (phone speaker, headphones, Bluetooth name...) like Spotify's device chip ----- */
+let OUT=null;
+const OUT_ICON={bt:'M7 7l10 10-5 5V2l5 5L7 17',wired:'M4 15v-3a8 8 0 0116 0v3M4 15h3v5H4zM17 15h3v5h-3z',usb:'M12 3v12M8 7l4-4 4 4M7 15h10v4H7z',hdmi:'M3 5h18v10H3zM8 19h8',speaker:'M5 3h14v18H5zM12 8a1.2 1.2 0 100 .1M12 17a3 3 0 100-.1'};
+window.zonSetOutput=o=>{try{OUT=typeof o=='string'?(o?JSON.parse(o):null):o}catch(e){OUT=null}mpOutDraw()};
+function mpOutRefresh(){const r=nget('audioOutput');if(r)window.zonSetOutput(r)}
+function mpOutDraw(){const e=$('mpOut');if(!e)return;if(!OUT||!OUT.name){e.style.display='none';return}
+ e.style.display='flex';e.innerHTML=`<svg viewBox="0 0 24 24"><path d="${OUT_ICON[OUT.kind]||OUT_ICON.speaker}"/></svg><span><i>Playing on </i>${esc(OUT.name)}</span>`}
+window.zonSetTrack=t=>{MT=t?cleanTrack(t):null;if(t)mpOutRefresh();mpP=!!(t&&t.playing!==false);mpS=t&&t.pos||0;MPD=t&&t.dur||0;if(!MT)closeMP();else if($('mp').classList.contains('show'))mpDraw();if($('aod').classList.contains('show'))tick()}
 /* ----- Volume: talks to the phone's media volume through the app ----- */
 const nget=(fn,...a)=>{try{return window.ZonNative&&ZonNative[fn]?ZonNative[fn](...a):null}catch(e){return null}};
 let mpVT=null,mpVDrag=false;
@@ -874,7 +941,21 @@ function analogHTML(k,d,hh,mm){
 function nRefresh(){document.querySelectorAll('.nslot').forEach(ns=>{const h=nStack(!!ns.closest('#pvAod'));ns._h=h;ns.innerHTML=h})}
 /* Native app can call these: zonSetNotifs([{app,text,time,color,pkg}]) and zonClearNotifs() when the system panel is cleared */
 window.zonClearNotifs=()=>{NOTIFS.length=0;nOff=0;nRefresh()};
-window.zonSetNotifs=a=>{const was=NOTIFS.length;NOTIFS.length=0;(a||[]).forEach(x=>NOTIFS.push([(x.app||'?')[0].toUpperCase(),x.color||'#3B82F6',x.app||'',x.text||'',x.time||'',x.pkg||'']));nOff=0;nRefresh();if(AO.glow!==false&&(a||[]).length>was&&$('aod').classList.contains('show'))glowEdge((a[0]&&a[0].color)||'#818CF8')};
+window.zonSetNotifs=a=>{const was=NOTIFS.length;NOTIFS.length=0;AO.seen=AO.seen||{};let ch=0;(a||[]).forEach(x=>{if(x.pkg&&!AO.seen[x.pkg]){AO.seen[x.pkg]=x.app||x.pkg;ch=1}});if(ch)saveAO();a=(a||[]).filter(x=>!(AO.mute||[]).includes(x.pkg));(a||[]).forEach(x=>NOTIFS.push([(x.app||'?')[0].toUpperCase(),x.color||'#3B82F6',x.app||'',x.text||'',x.time||'',x.pkg||'']));nOff=0;nRefresh();if(AO.glow!==false&&(a||[]).length>was&&$('aod').classList.contains('show'))glowEdge((a[0]&&a[0].color)||'#818CF8')};
+const WXC=[[0,'Clear','☀️'],[1,'Mostly clear','🌤️'],[2,'Partly cloudy','⛅'],[3,'Cloudy','☁️'],[45,'Fog','🌫️'],[51,'Drizzle','🌦️'],[61,'Rain','🌧️'],[71,'Snow','🌨️'],[80,'Showers','🌦️'],[95,'Storm','⛈️']];
+const wxInfo=c=>{let r=WXC[0];for(const x of WXC)if(c>=x[0])r=x;return r};
+let WX=null;try{WX=JSON.parse(localStorage.getItem('zonWx'))}catch(e){}
+async function wxFetch(force){if(!AO.wx||!AO.city)return;if(!force&&WX&&Date.now()-WX.t<1800000)return;
+ try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),8000);const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${AO.city.lat}&longitude=${AO.city.lon}&current=temperature_2m,weather_code&timezone=auto`,{signal:ac.signal});clearTimeout(tm);const d=await r.json();WX={t:Date.now(),c:d.current.temperature_2m,k:d.current.weather_code};localStorage.setItem('zonWx',JSON.stringify(WX));if($('aod').classList.contains('show'))tick()}catch(e){}}
+const wxHTML=()=>{if(!AO.wx||!WX)return '';const i=wxInfo(WX.k),f=AO.unit=='f',t=Math.round(f?WX.c*9/5+32:WX.c);return `<div class="aod-wx" style="font-size:.9rem;opacity:.8;margin-top:.25rem;text-align:center">${i[2]} ${t}°${f?'F':'C'} · ${i[1]}${AO.city?' · '+esc(AO.city.name):''}</div>`};
+function wxUnit(){AO.unit=AO.unit=='f'?'c':'f';saveAO();drawStudio()}
+async function wxFind(){const q=($('wxq')||{}).value||'';if(q.trim().length<2)return;const box=$('wxres');box.textContent='Searching…';
+ try{const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=4&name='+encodeURIComponent(q.trim()));const d=await r.json();window._wxr=d.results||[];box.innerHTML=window._wxr.length?window._wxr.map((x,i)=>`<div class="row" onclick="wxPick(${i})"><div>${esc(x.name)}<small>${esc([x.admin1,x.country].filter(Boolean).join(', '))}</small></div></div>`).join(''):'No city found'}catch(e){box.textContent='Could not search. Check your connection.'}}
+function wxPick(i){const x=(window._wxr||[])[i];if(!x)return;AO.city={name:x.name,lat:x.latitude,lon:x.longitude};saveAO();wxFetch(true);drawStudio()}
+function wxUI(){return sw('wx','Weather on the always-on display','Sends only the city you pick to Open-Meteo, now and then')+(AO.wx?`<div class="row"><div>${AO.city?esc(AO.city.name):'No city chosen'}<small>Tap the unit to switch</small></div><button class="chip on" onclick="wxUnit()">°${AO.unit=='f'?'F':'C'}</button></div><div class="row"><input id="wxq" placeholder="Search for your city" style="flex:1;min-width:0;background:var(--card);color:var(--txt);border:1px solid var(--line,#ffffff22);border-radius:.75rem;padding:.6rem .8rem"><button class="chip on" onclick="wxFind()">Find</button></div><div id="wxres"></div>`:'')}
+function appsHTML(){const sn=AO.seen||{},ks=Object.keys(sn);const note='<p style="font-size:.75rem;color:var(--mut);margin:.4rem 0 .6rem">Notification text stays on this phone and is never uploaded.</p>';if(!ks.length)return note;
+ return note+'<h3 class="sec">Show notifications from</h3>'+ks.map(k=>`<div class="row"><div>${esc(sn[k])}</div><div class="sw ${(AO.mute||[]).includes(k)?'':'on'}" data-k="${esc(k)}" onclick="muteApp(this.dataset.k)"></div></div>`).join('')}
+function muteApp(k){AO.mute=AO.mute||[];const i=AO.mute.indexOf(k);if(i<0)AO.mute.push(k);else AO.mute.splice(i,1);saveAO();for(let j=NOTIFS.length-1;j>=0;j--)if(AO.mute.includes(NOTIFS[j][5]))NOTIFS.splice(j,1);nRefresh();drawStudio()}
 function glowEdge(c){let g=$('aodGlow');if(!g){g=document.createElement('div');g.id='aodGlow';$('aod').appendChild(g)}g.style.setProperty('--gc',c);g.classList.remove('on');void g.offsetWidth;g.classList.add('on')}
 function openNotif(){const x=NOTIFS[nK()];if(!x)return;if(!native('openApp',x[5]))toast('Opening '+x[2])}
 let _ns=null;const aodEl=$('aod');
@@ -894,7 +975,7 @@ function battHTML(l,chg,mins,sty,compact,bs){
  const ico=chg?`<svg viewBox="0 0 24 24"><path d="${SI.bolt}"/></svg>`:`<svg class="o" viewBox="0 0 24 24"><path d="M4 7h13a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8a1 1 0 011-1zM21 10.5v3"/></svg>`;
  return `<div class="bpw" style="font-size:${(bs||100)/100}em"><div class="bp s${sty}${chg?' chg':''}${low?' low':''}" style="--w:${w}%"><div class="bp-f">${fx}</div>${seg}${cm}<div class="bp-t">${ico}<span>${pc}%</span></div></div>${compact?'':`<div class="aod-batt">${battStatus(chg,mins)}</div>`}</div>`}
 function aodParts(d,pv){
- const dt=`<div class="aod-date">${d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'})}</div>`;
+ const dt=`<div class="aod-date">${d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'})}</div>${wxHTML()}`;
  let top='',mid=`<div style="font-size:${(AO.size/AO.tsize).toFixed(3)}em;display:flex;flex-direction:column;align-items:center">${fillOn()?fillClock(d):clockHTML(d)}</div>`,bot='';
  if(AO.date=='top')top+=dt;
  
@@ -966,7 +1047,7 @@ loadFonts();
 
 /* ----- Full-screen mode ----- */
 let aodT,shiftT,offT,studioT;
-function startAod(){native('immersive',true);$('aod').classList.add('show');clearTimeout(aodT);loop();
+function startAod(){wxFetch();native('immersive',true);$('aod').classList.add('show');clearTimeout(aodT);loop();
  shiftT=setInterval(shift,Math.max(1,AO.shiftS||30)*1000);
  if(AO.offS)offT=setTimeout(stopAod,AO.offS*1000);
  try{const r=document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();Promise.resolve(r).then(lockRot).catch(lockRot)}catch(e){lockRot()}
@@ -990,7 +1071,7 @@ function openStudio(){$('studio').classList.add('show');drawStudio();clearTimeou
 function closeStudio(){$('studio').classList.remove('show');clearTimeout(studioT)}
 function refreshPv(){const e=$('pvAod');if(e)paintAod(e,AO.tsize*.36*((e.clientWidth||122)/122),false,AO.sim)}
 function setAO(k,v){AO[k]=v;saveAO();refreshPv()}
-function tg(k){AO[k]=!AO[k];saveAO();if((k=='notif'||k=='media')&&AO[k]&&!hasNA())askNA();if(k=='bg'&&!native('setBackground',!!AO.bg))toast('Works only in the installed app');if(k=='sched')syncSched();drawStudio()}
+function tg(k){AO[k]=!AO[k];saveAO();if((k=='notif'||k=='media')&&AO[k]&&!hasNA())askNA();if(k=='bg'&&!native('setBackground',!!AO.bg))toast('Works only in the installed app');if(k=='sched')syncSched();if(k=='wx'&&AO.wx)wxFetch(true);drawStudio()}
 function pick(k,v){AO[k]=v;saveAO();drawStudio()}
 function usePreset(n){const p=n=='Mine'?JSON.parse(localStorage.getItem('zonAodMine')||'{}'):PRESETS[n];Object.assign(AO,p);saveAO();drawStudio()}
 function saveMine(){try{localStorage.setItem('zonAodMine',JSON.stringify(AO));try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}toast('\u2713 Saved as My preset');drawStudio()}catch(e){toast('Could not save preset')}}
@@ -1018,7 +1099,7 @@ function lookHTML(){const t=new Date(2020,0,1,10,8,0),mine=localStorage.getItem(
  <h3 class="sec">Battery Pill Style</h3><div class="stl">${BSTY.map((n,i)=>`<button class="stc ${AO.bstyle==i?'on':''}" onclick="pick('bstyle',${i})"><div style="font-size:.42rem">${battHTML(.7234,true,0,i,true,100)}</div><small>${n}</small></button>`).join('')}</div>
  ${sw('sim','Preview as charging','Shows the charging animation in the preview above')}`}
 const SCO=[['none','Off'],['flash','Flashlight'],['cam','Camera'],['phone','Phone'],['sms','Messages']];
-const PK={sl:SCO,sr:SCO,date:[['top','Top'],['center','Under clock'],['bottom','Bottom'],['off','Hidden']],
+const PK={fnOrder:[['ta','Song - Artist'],['at','Artist - Song']],sl:SCO,sr:SCO,date:[['top','Top'],['center','Under clock'],['bottom','Bottom'],['off','Hidden']],
  shiftS:[[5,'Every 5 seconds'],[10,'Every 10 seconds'],[30,'Every 30 seconds'],[60,'Every minute'],[300,'Every 5 minutes'],[600,'Every 10 minutes']],
  offS:[[0,'Never'],[5,'After 5 seconds'],[10,'After 10 seconds'],[30,'After 30 seconds'],[60,'After 1 minute'],[300,'After 5 minutes'],[600,'After 10 minutes']]};
 const pr=(k,t,sub)=>{const o=PK[k].find(x=>x[0]==AO[k])||PK[k][0];return `<div class="row" onclick="pickAO('${k}','${t}')"><div>${t}${sub?`<small>${sub}</small>`:''}</div><span class="rv">${o[1]} ›</span></div>`};
@@ -1032,7 +1113,10 @@ function settingsHTML(){
  ${sw('notif','Notification pills','Stacked carousel. Needs Notification access on device')}
  ${sw('npriv','Hide notification text','Pills show only the app name')}
  ${sw('glow','Edge glow on new notification','A soft coloured glow around the screen edge when something arrives')}
+ ${wxUI()}
+ ${appsHTML()}
  ${sw('media','Music player controls','Track, artist and play controls. Needs Notification access on device')}
+ ${pr('fnOrder','Song file names','Used when a song has no tags and the name looks like Song_-_Artist.mp3')}
  ${sw('quote','Daily Vibe quote','A short motivational line each day')}
  ${sw('sched','Only at night','Run the screen saver only between the times below')}${AO.sched?pr('schS','From')+pr('schE','Until'):''}
  ${sw('bg','Run on lock screen','Shows the AOD when the screen turns off. Needs Display over other apps')}
@@ -1083,7 +1167,7 @@ try{const A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.a
 /* ---------- Pull down to refresh (cards blink as blurry light, no spinner) ---------- */
 let RF=0;
 async function refreshAll(){if(RF)return;RF=1;const m=$('main'),t0=Date.now(),base=CATALOG_URL.replace(/[^/]*$/,'');m.classList.add('skel');let data=null;
- try{const r=await fetch(CATALOG_URL+(CATALOG_URL.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;data=await r.json();try{localStorage.setItem('zonCat',JSON.stringify({d:data,b:base}))}catch(e){}}catch(e){data=null}
+ try{const r=await fetch(CATALOG_URL+(CATALOG_URL.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;data=await r.json();CAT_RAW=JSON.stringify(data);try{localStorage.setItem('zonCat',JSON.stringify({d:data,b:base}))}catch(e){}}catch(e){data=null}
  setTimeout(()=>{if(data)build(data,base);else render();m.classList.remove('skel');m.classList.add('fin');setTimeout(()=>m.classList.remove('fin'),450);if(!data)toast('Could not refresh. Check your connection.');RF=0},Math.max(0,1000-(Date.now()-t0)))}
 (function(){const m=$('main'),TH=70;let y0=0,x0=0,pull=0,act=false;
  m.addEventListener('touchstart',e=>{act=false;pull=0;if(RF||tab=='set'||m.scrollTop>0||e.touches.length>1)return;y0=e.touches[0].clientY;x0=e.touches[0].clientX;act=true},{passive:true});
@@ -1098,6 +1182,7 @@ async function refreshAll(){if(RF)return;RF=1;const m=$('main'),t0=Date.now(),ba
 applyTheme();
 ['splashLogo','consentLogo','topLogo'].forEach(i=>$(i).innerHTML=logoEl());
 if(AOD_MODE){$('splash').style.display='none';$('consent').style.display='none';startAod()}else{setTimeout(()=>{$('splash').classList.add('out');if(S.consent!==POLICY_VERSION)$('consent').style.display='flex'},1700);if(AO.bg)native('setBackground',true)}
+S.wr=Object.assign({on:false,mins:360,src:'all',where:'both',wifi:true},S.wr||{});
 loadCatalog();syncNative();syncSched();setTimeout(()=>{if((AO.notif||AO.media)&&!hasNA()&&!sessionStorage.getItem('naAsked')){sessionStorage.setItem('naAsked','1');askNA()}},2500);
 addEventListener('resize',()=>{if($('aod').classList.contains('show'))tick();refreshPv()});
 </script>
