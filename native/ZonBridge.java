@@ -1,5 +1,6 @@
 package com.zon.app;
 import android.app.Activity;
+import android.app.KeyguardManager;
 import android.app.WallpaperManager;
 import android.content.*;
 import android.hardware.camera2.CameraManager;
@@ -79,18 +80,74 @@ public class ZonBridge {
   @JavascriptInterface public void openCamera() { start(new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)); }
   @JavascriptInterface public void openDialer() { start(new Intent(Intent.ACTION_DIAL)); }
   @JavascriptInterface public void openMessages() { start(Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MESSAGING)); }
+  /** One tap on a notification pill: unlock if needed, open that app, close the always-on display. */
   @JavascriptInterface public void openApp(String pkg) {
-    Intent i = c.getPackageManager().getLaunchIntentForPackage(pkg);
-    if (i != null) start(i); else toast("App not found");
+    final Intent i = c.getPackageManager().getLaunchIntentForPackage(pkg);
+    if (i == null) { toast("App not found"); return; }
+    ui(() -> {
+      final boolean aod = a instanceof AodActivity;
+      KeyguardManager km = (KeyguardManager) c.getSystemService(Context.KEYGUARD_SERVICE);
+      if (aod && km != null && km.isKeyguardLocked() && Build.VERSION.SDK_INT >= 26) {
+        km.requestDismissKeyguard(a, new KeyguardManager.KeyguardDismissCallback() {
+          @Override public void onDismissSucceeded() { start(i); a.finishAndRemoveTask(); }
+        });
+      } else { start(i); if (aod) a.finishAndRemoveTask(); }
+    });
   }
   @JavascriptInterface public boolean hasNotifAccess() { String s = Settings.Secure.getString(c.getContentResolver(), "enabled_notification_listeners"); return s != null && s.contains(c.getPackageName()); }
-  @JavascriptInterface public void openNotifAccess() { start(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)); }
+  @JavascriptInterface public void openNotifAccess() {
+    try {
+      if (Build.VERSION.SDK_INT >= 30) {
+        Intent i = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS);
+        i.putExtra(Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME, new ComponentName(c, NotifService.class).flattenToString());
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); c.startActivity(i); return;
+      }
+    } catch (Exception e) { }
+    start(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+  }
+  /** App info page: its top-right menu has "Allow restricted settings" (needed for apps installed from a file). */
+  @JavascriptInterface public void openAppInfo() { start(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + c.getPackageName()))); }
+  boolean granted(String p) { return Build.VERSION.SDK_INT < 23 || c.checkSelfPermission(p) == android.content.pm.PackageManager.PERMISSION_GRANTED; }
+  /** Everything the app needs, as JSON booleans. */
+  @JavascriptInterface public String permStatus() {
+    try {
+      org.json.JSONObject o = new org.json.JSONObject();
+      o.put("overlay", Settings.canDrawOverlays(c));
+      o.put("notifAccess", hasNotifAccess());
+      o.put("postNotif", Build.VERSION.SDK_INT < 33 || granted("android.permission.POST_NOTIFICATIONS"));
+      o.put("nearby", Build.VERSION.SDK_INT < 31 || granted("android.permission.BLUETOOTH_CONNECT"));
+      o.put("writeSettings", Settings.System.canWrite(c));
+      PowerManager pm = (PowerManager) c.getSystemService(Context.POWER_SERVICE);
+      o.put("battery", pm.isIgnoringBatteryOptimizations(c.getPackageName()));
+      return o.toString();
+    } catch (Exception e) { return ""; }
+  }
+  @JavascriptInterface public void requestPerm(final String k) {
+    ui(() -> { try {
+      switch (k) {
+        case "overlay": start(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + c.getPackageName()))); break;
+        case "notifAccess": openNotifAccess(); break;
+        case "postNotif": if (Build.VERSION.SDK_INT >= 33) a.requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 71); break;
+        case "nearby": if (Build.VERSION.SDK_INT >= 31) a.requestPermissions(new String[]{"android.permission.BLUETOOTH_CONNECT"}, 72); break;
+        case "writeSettings": start(new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + c.getPackageName()))); break;
+        case "battery": start(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + c.getPackageName()))); break;
+        default: break;
+      }
+    } catch (Exception e) { toast("Open Settings and allow it for Zon"); } });
+  }
+  /** Latest music track / notifications, so a freshly opened lock-screen page never starts empty. */
+  @JavascriptInterface public String currentTrack() { return NotifService.lastTrack == null ? "" : NotifService.lastTrack; }
+  @JavascriptInterface public String currentNotifs() { return NotifService.lastNotifs == null ? "" : NotifService.lastNotifs; }
   @JavascriptInterface public void syncNotifs() { NotifService.sync(c); }
-  @JavascriptInterface public void skipNext() { android.media.session.MediaController m = NotifService.mc; if (m != null) m.getTransportControls().skipToNext(); }
-  @JavascriptInterface public void skipPrev() { android.media.session.MediaController m = NotifService.mc; if (m != null) m.getTransportControls().skipToPrevious(); }
+  void key(int code) {
+    try { AudioManager am = (AudioManager) c.getSystemService(Context.AUDIO_SERVICE);
+      am.dispatchMediaKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, code)); am.dispatchMediaKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, code)); } catch (Exception e) { }
+  }
+  @JavascriptInterface public void skipNext() { android.media.session.MediaController m = NotifService.mc; if (m != null) m.getTransportControls().skipToNext(); else key(KeyEvent.KEYCODE_MEDIA_NEXT); }
+  @JavascriptInterface public void skipPrev() { android.media.session.MediaController m = NotifService.mc; if (m != null) m.getTransportControls().skipToPrevious(); else key(KeyEvent.KEYCODE_MEDIA_PREVIOUS); }
   @JavascriptInterface public void playPause() {
     android.media.session.MediaController m = NotifService.mc;
-    if (m == null) return;
+    if (m == null) { key(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE); return; }
     android.media.session.PlaybackState p = m.getPlaybackState();
     if (p != null && p.getState() == android.media.session.PlaybackState.STATE_PLAYING) m.getTransportControls().pause(); else m.getTransportControls().play();
   }

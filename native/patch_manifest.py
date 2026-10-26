@@ -1,7 +1,7 @@
 p = 'android/app/src/main/AndroidManifest.xml'
 s = open(p, encoding='utf-8').read()
 perms = ''.join(f'    <uses-permission android:name="android.permission.{x}"/>\n' for x in
-  ['INTERNET', 'RECEIVE_BOOT_COMPLETED', 'FLASHLIGHT', 'WRITE_SETTINGS', 'SET_WALLPAPER', 'BLUETOOTH_CONNECT', 'POST_NOTIFICATIONS', 'SYSTEM_ALERT_WINDOW', 'FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_SPECIAL_USE', 'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS', 'WAKE_LOCK'])
+  ['INTERNET', 'RECEIVE_BOOT_COMPLETED', 'FLASHLIGHT', 'WRITE_SETTINGS', 'SET_WALLPAPER', 'BLUETOOTH_CONNECT', 'POST_NOTIFICATIONS', 'SYSTEM_ALERT_WINDOW', 'FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_SPECIAL_USE', 'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS', 'WAKE_LOCK', 'QUERY_ALL_PACKAGES'])
 svc = '''    <service android:name=".NotifService" android:label="Zon" android:exported="true"
         android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
       <intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter>
