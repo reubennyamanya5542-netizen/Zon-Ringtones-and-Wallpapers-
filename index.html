@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <title>Zon</title>
 <style>
@@ -392,7 +392,7 @@ main.fin{animation:fin .35s ease}
 @keyframes fin{from{opacity:0}}
 /* no orange focus ring (Android shows it after a screenshot key press), faster taps, list loader */
 *:focus,*:focus-visible,button:focus,button:focus-visible,[tabindex]:focus,[tabindex]:focus-visible{outline:none!important}
-html,body,button,.card,.item{touch-action:manipulation}
+html,body{touch-action:pan-x pan-y}button,.card,.item{touch-action:manipulation}
 .more{height:3.4rem;display:grid;place-items:center;color:var(--mut);font-size:.78rem;animation:morePulse 1.1s ease-in-out infinite alternate}
 @keyframes morePulse{from{opacity:.35}to{opacity:1}}
 .alist .item{content-visibility:auto;contain-intrinsic-size:auto 4.6rem}
@@ -454,6 +454,21 @@ input[type=range]{accent-color:#8b5cf6}
 .toast{border-radius:6.188rem;background:#1f2233ee;border:1px solid #ffffff1a;backdrop-filter:blur(12px);box-shadow:0 8px 28px #000a}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:.01ms!important}}
 .gwr{width:4.2em;text-align:center}.gk{position:relative;width:3.6em;height:3.6em;margin:0 auto}.gk .ring{width:100%;height:100%;display:block}.gk .ic{position:absolute;inset:0;margin:auto;width:1.4em;height:1.4em;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.gwr b{display:block;font-size:1em;margin-top:.3em;color:#fff;position:static}.gwr small{display:block;font-size:.72em;color:#ffffffa6;margin-top:.1em;position:static}
+
+/* ===== Permission list ===== */
+#perm{z-index:300}
+.pwrap{width:100%;max-width:30rem;text-align:left;display:flex;flex-direction:column;gap:.6rem}
+.pwrap h2{margin:0;font-size:1.4rem}.pwrap p{margin:0 0 .3rem;color:var(--mut);font-size:.875rem}
+.prm{display:flex;align-items:center;gap:.75rem;background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.75rem .85rem;flex-wrap:wrap}
+.prm .pic{flex:none;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:#6366F133;color:var(--pri2);font-weight:700;font-size:.85rem}
+.prm.ok .pic{background:#10B98133;color:#34D399}
+.prm .pic svg{width:1.1rem;height:1.1rem;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.prm .ptx{flex:1;min-width:0}.prm .ptx b{display:block;font-size:.95rem}.prm .ptx small{display:block;color:var(--mut);font-size:.75rem;margin-top:.1rem}
+.prm .pst{color:#34D399;font-size:.78rem;font-weight:600}
+.phelp{flex:1 1 100%;font-size:.75rem;color:var(--txt);background:#F59E0B22;border-radius:.7rem;padding:.6rem .7rem;line-height:1.45}
+.phelp .chip{margin-top:.5rem;display:inline-block}
+.pbar{height:.3rem;border-radius:1rem;background:#ffffff1c;overflow:hidden}.pbar i{display:block;height:100%;background:linear-gradient(90deg,#818CF8,#38BDF8);transition:width .4s}
+.btn[disabled]{opacity:.4;pointer-events:none}
 </style>
 </head>
 <body>
@@ -463,6 +478,7 @@ input[type=range]{accent-color:#8b5cf6}
   <div id="splash" class="full"><div class="lg" id="splashLogo"></div></div>
 
   <!-- First-run consent -->
+  <div id="perm" class="full" style="display:none"></div>
   <div id="consent" class="full" style="display:none">
     <div class="lg" style="width:5.25rem;height:5.25rem" id="consentLogo"></div>
     <h2 style="margin:0.875rem 0 0">Zon</h2>
@@ -535,8 +551,12 @@ function logoEl(){return `<img src="${LOGO_FILE}" alt="" onerror="this.outerHTML
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2400)}
 const native=(fn,...a)=>{if(window.ZonNative&&ZonNative[fn]){ZonNative[fn](...a);return true}return false};
 const hasNA=()=>{try{return !window.ZonNative||!ZonNative.hasNotifAccess||!!ZonNative.hasNotifAccess()}catch(e){return true}};
-const syncNative=()=>{try{window.ZonNative&&ZonNative.syncNotifs&&ZonNative.syncNotifs()}catch(e){}};
-function askNA(){$('dlg').innerHTML=`<h3 style="margin:0 0 .25rem">Allow notification access</h3><p style="color:var(--mut);margin:0 0 .5rem;font-size:.875rem">Zon shows your notifications and music controls on the always-on display. Android needs you to switch this on once. Everything stays on your phone and is never uploaded.</p><button class="act" onclick="closeSheet();native('openNotifAccess')">Open settings</button><button class="btn ghost" onclick="closeSheet()">Not now</button>`;$('sbg').classList.add('show');$('dlg').classList.add('show')}
+let _lt='',_ln='';
+function pullNative(){try{if(!window.ZonNative)return;const t=ZonNative.currentTrack?ZonNative.currentTrack():'';if(t!=null&&t!==_lt){_lt=t;window.zonSetTrack(t?JSON.parse(t):null)}
+ const n=ZonNative.currentNotifs?ZonNative.currentNotifs():'';if(n&&n!==_ln){_ln=n;window.zonSetNotifs(JSON.parse(n))}}catch(e){}}
+const syncNative=()=>{try{window.ZonNative&&ZonNative.syncNotifs&&ZonNative.syncNotifs()}catch(e){}setTimeout(pullNative,300)};
+setInterval(()=>{if(window.ZonNative&&(AOD_MODE||document.getElementById('aod').classList.contains('show')))pullNative()},2000);
+function askNA(){$('dlg').innerHTML=`<h3 style="margin:0 0 .25rem">Allow notification access</h3><p style="color:var(--mut);margin:0 0 .5rem;font-size:.875rem">Zon shows your notifications and music controls on the always-on display. Everything stays on your phone and is never uploaded.</p><p style="margin:0 0 .6rem;font-size:.78rem;color:var(--txt);background:#F59E0B22;border-radius:.7rem;padding:.55rem .7rem;line-height:1.45">Switch greyed out? Tap <b>Open App info</b>, then the \u22ee menu (top right) \u2192 <b>Allow restricted settings</b> (enter your phone passcode), then come back and tap Open settings.</p><button class="act" onclick="closeSheet();native('openNotifAccess')">Open settings</button><button class="act" onclick="closeSheet();native('openAppInfo')">Open App info</button><button class="btn ghost" onclick="closeSheet()">Not now</button>`;$('sbg').classList.add('show');$('dlg').classList.add('show')}
 let ac;function tone(freqs,dur=1.2){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const n=ac.currentTime;freqs.forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain(),s=n+i*dur/freqs.length,e=n+(i+1)*dur/freqs.length;o.frequency.value=f;g.gain.setValueAtTime(.0001,s);g.gain.exponentialRampToValueAtTime(.25,s+.03);g.gain.exponentialRampToValueAtTime(.0001,e);o.connect(g).connect(ac.destination);o.start(s);o.stop(e+.05)})}catch(e){}}
 
 /* ---------- State ---------- */
@@ -544,6 +564,8 @@ let S={consent:null,theme:'dark',saver:false,fav:[],dl:[],meta:{},size:{}};
 try{Object.assign(S,JSON.parse(localStorage.getItem('zon')||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem('zon',JSON.stringify(S))}catch(e){}};
 document.addEventListener('contextmenu',e=>{if(!/INPUT|TEXTAREA/.test(e.target.tagName))e.preventDefault()});document.addEventListener('selectstart',e=>{if(!/INPUT|TEXTAREA/.test(e.target.tagName))e.preventDefault()});
+['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault()));
+document.addEventListener('touchmove',e=>{if(e.touches.length>1&&e.cancelable)e.preventDefault()},{passive:false});
 const AOD_MODE=location.hash=='#aod';
 let tab='explore',kind='w',chip='All',Q='',vkind='a',sortNew=false;
 let CAT={a:[],w:[],feat:[],cols:[]},ALL={};
@@ -666,6 +688,7 @@ function set(){const tn={dark:'Dark',light:'Light',system:'System Default'}[S.th
  <div class="row"><div>Local cache<small>${cacheMB()} MB used · ${S.dl.length} items</small></div><button class="chip on" onclick="clearCache()">Clear Offline Cache</button></div>
  <div class="row"><div>Back up<small>Save favorites and screen saver settings to a file</small></div><button class="chip on" onclick="backupData()">Back up</button></div>
  <div class="row"><div>Restore<small>Load a Zon backup file</small></div><button class="chip on" onclick="$('bkIn').click()">Restore</button><input type="file" id="bkIn" accept=".json,application/json" style="display:none" onchange="restoreData(this)"></div>
+ ${window.ZonNative&&ZonNative.permStatus?`<div class="row" onclick="openPerm(true)"><div>Permissions<small>Review what Zon is allowed to do</small></div><span class="rv">Review ›</span></div>`:''}
  ${wrUI()}
  <div class="sfoot"><a onclick="openSub('about')">About Zon</a>·<a onclick="openSub('privacy')">Privacy Policy</a>·<a onclick="openSub('terms')">Terms of Use</a><div>Zon v20.34.12</div></div></div>`}
 function wrList(){const w=S.wr.src=='fav'?S.fav.map(id=>ALL[id]||S.meta[id]).filter(x=>x&&x.type=='w'):CAT.w;return w.slice(0,60).map(x=>x.url).filter(u=>/^https?:/.test(u))}
@@ -1015,7 +1038,8 @@ function analogHTML(k,d,hh,mm){
 function nRefresh(){if(!NOTIFS.length)closeNList();document.querySelectorAll('.nslot').forEach(ns=>{const h=nStack(!!ns.closest('#pvAod'));ns._h=h;ns.innerHTML=h})}
 /* Native app can call these: zonSetNotifs([{app,text,time,color,pkg}]) and zonClearNotifs() when the system panel is cleared */
 window.zonClearNotifs=()=>{NOTIFS.length=0;nOff=0;nRefresh()};
-window.zonSetNotifs=a=>{const was=NOTIFS.length;NOTIFS.length=0;AO.seen=AO.seen||{};let ch=0;(a||[]).forEach(x=>{if(x.pkg&&!AO.seen[x.pkg]){AO.seen[x.pkg]=x.app||x.pkg;ch=1}});if(ch)saveAO();a=(a||[]).filter(x=>!(AO.mute||[]).includes(x.pkg));(a||[]).forEach(x=>NOTIFS.push([(x.app||'?')[0].toUpperCase(),x.color||'#3B82F6',x.app||'',x.text||'',x.time||'',x.pkg||'']));nOff=0;nRefresh();if(AO.glow!==false&&(a||[]).length>was&&$('aod').classList.contains('show'))glowEdge((a[0]&&a[0].color)||'#818CF8')};
+const appName=n=>{n=String(n||'');if(!/^[a-z0-9_]+(\.[a-z0-9_]+)+$/i.test(n))return n;const p=n.split('.');if(p.length>1&&/^(com|org|net|io|app|me|co)$/i.test(p[0]))p.shift();return p.map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ')};
+window.zonSetNotifs=a=>{a=(a||[]).map(x=>Object.assign({},x,{app:appName(x.app)}));const was=NOTIFS.length;NOTIFS.length=0;AO.seen=AO.seen||{};let ch=0;(a||[]).forEach(x=>{if(x.pkg&&!AO.seen[x.pkg]){AO.seen[x.pkg]=x.app||x.pkg;ch=1}});if(ch)saveAO();a=(a||[]).filter(x=>!(AO.mute||[]).includes(x.pkg));(a||[]).forEach(x=>NOTIFS.push([(x.app||'?')[0].toUpperCase(),x.color||'#3B82F6',x.app||'',x.text||'',x.time||'',x.pkg||'']));nOff=0;nRefresh();if(AO.glow!==false&&(a||[]).length>was&&$('aod').classList.contains('show'))glowEdge((a[0]&&a[0].color)||'#818CF8')};
 const WXC=[[0,'Clear','☀️'],[1,'Mostly clear','🌤️'],[2,'Partly cloudy','⛅'],[3,'Cloudy','☁️'],[45,'Fog','🌫️'],[51,'Drizzle','🌦️'],[61,'Rain','🌧️'],[71,'Snow','🌨️'],[80,'Showers','🌦️'],[95,'Storm','⛈️']];
 const wxInfo=c=>{let r=WXC[0];for(const x of WXC)if(c>=x[0])r=x;return r};
 let WX=null;try{WX=JSON.parse(localStorage.getItem('zonWx'))}catch(e){}
@@ -1041,12 +1065,14 @@ function openNList(){if(!NOTIFS.length)return;let o=$('nlist');
 function closeNList(){const o=$('nlist');if(!o||!o.classList.contains('show'))return;o.classList.add('out');setTimeout(()=>o.classList.remove('show','out'),350)}
 function nOpen(i){const x=NOTIFS[i];closeNList();if(x&&!native('openApp',x[5]))toast('Opening '+x[2])}
 function openNotif(){const x=NOTIFS[nK()];if(!x)return;if(!native('openApp',x[5]))toast('Opening '+x[2])}
-let _ns=null;const aodEl=$('aod');
-aodEl.addEventListener('pointerdown',e=>{_ns=e.target.closest('.nst')?{x:e.clientX,y:e.clientY}:null});
-aodEl.addEventListener('pointerup',e=>{if(!_ns)return;const dx=e.clientX-_ns.x,dy=e.clientY-_ns.y;_ns=null;
+let _ns=null,_lp=null;const aodEl=$('aod');
+aodEl.addEventListener('pointerdown',e=>{clearTimeout(_lp);_ns=e.target.closest('.nst')?{x:e.clientX,y:e.clientY}:null;if(_ns)_lp=setTimeout(()=>{if(_ns){_ns.lp=1;openNList()}},600)});
+aodEl.addEventListener('pointermove',e=>{if(_ns&&(Math.abs(e.clientX-_ns.x)>12||Math.abs(e.clientY-_ns.y)>12))clearTimeout(_lp)});
+aodEl.addEventListener('pointercancel',()=>{clearTimeout(_lp);_ns=null});
+aodEl.addEventListener('pointerup',e=>{clearTimeout(_lp);if(!_ns)return;const s=_ns,dx=e.clientX-s.x,dy=e.clientY-s.y;_ns=null;if(s.lp)return;
  if(dy<-28&&Math.abs(dy)>Math.abs(dx)){nOff++;nRefresh()}
  else if(Math.abs(dx)>60){NOTIFS.splice(nK(),1);nRefresh()}
- else if(Math.abs(dx)<10&&Math.abs(dy)<10)openNList()});
+ else if(Math.abs(dx)<=12&&Math.abs(dy)<=12)openNotif()});  /* one tap opens the app; hold shows the full list */
 ['click','dblclick'].forEach(t=>aodEl.addEventListener(t,e=>{if(e.target.closest('.nst'))e.stopPropagation()},true));
 const battStatus=(chg,mins)=>chg?'Charging'+(mins?` \u00b7 Full in ${mins} min`:''):'On battery';
 const battMins=sim=>sim?24:(batt.c&&isFinite(batt.t)&&batt.t>0?Math.round(batt.t/60):0);
@@ -1308,10 +1334,40 @@ async function refreshAll(){if(RF)return;RF=1;const m=$('main'),t0=Date.now(),ba
  function end(){const go=pull>=TH;act=false;pull=0;m.style.transition='transform .25s';m.style.transform='';if(go)refreshAll();else if(!RF)m.classList.remove('skel')}
  m.addEventListener('touchend',()=>{if(act||pull)end()});m.addEventListener('touchcancel',()=>{if(act||pull)end()})})();
 
+
+/* ---------- Permissions: everything the app needs, in one list. The app opens once all are allowed. ---------- */
+const PERMS=[
+ ['overlay','Display over other apps','Lets the always-on display appear over your lock screen.'],
+ ['notifAccess','Notification access','Shows notification pills and music controls on the always-on display.'],
+ ['postNotif','Notifications','Lets Zon keep the lock-screen display running in the background.'],
+ ['nearby','Nearby devices','Shows which speaker or headphones your music is playing on.'],
+ ['writeSettings','Modify system settings','Lets you set ringtones, alarms and notification sounds.'],
+ ['battery','Run in background','Stops Android from putting the lock-screen display to sleep.']];
+let PRMS=null,PRMSTEP=false,PRMMAN=false,PRMTRY={},PRMT=null,_prms='';
+const permGet=()=>{try{if(window.ZonNative&&ZonNative.permStatus){const r=ZonNative.permStatus();return r?JSON.parse(r):null}}catch(e){}return null};
+const permMissing=()=>{const s=permGet();return s?PERMS.filter(p=>!s[p[0]]).map(p=>p[0]):[]};
+function permDraw(){const s=PRMS||{},done=PERMS.filter(p=>s[p[0]]).length,all=done==PERMS.length;
+ const help=`<div class="phelp">Switch greyed out? Android blocks this for apps installed from a file. Tap <b>Open App info</b>, then the \u22ee menu (top right) \u2192 <b>Allow restricted settings</b> (enter your phone passcode). Come back here and tap Allow again.<br><button class="chip on" onclick="native('openAppInfo')">Open App info</button></div>`;
+ const ck='<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>';
+ $('perm').innerHTML=`<div class="pwrap"><h2>Allow permissions</h2><p>Zon needs these to show the always-on display on your lock screen. Allow each one to continue.</p>
+ <div class="pbar"><i style="width:${done/PERMS.length*100}%"></i></div>
+ ${PERMS.map(([k,t,d],i)=>{const ok=!!s[k];return `<div class="prm ${ok?'ok':''}"><div class="pic">${ok?ck:i+1}</div><div class="ptx"><b>${t}</b><small>${d}</small></div>${ok?'<span class="pst">Allowed</span>':`<button class="chip on" onclick="permAsk('${k}')">Allow</button>`}${k=='notifAccess'&&!ok&&PRMTRY.notifAccess?help:''}</div>`}).join('')}
+ <button class="btn" onclick="permAll()" ${all?'style="display:none"':''}>Allow all</button>
+ <button class="btn ${all?'':'ghost'}" ${all||PRMMAN?'':'disabled'} onclick="permDone()">${all?'Continue':PRMMAN?'Close':'Allow everything to continue'}</button></div>`}
+function permAsk(k){PRMTRY[k]=1;native('requestPerm',k)}
+function permAll(){PRMSTEP=true;permNext()}
+function permNext(){const m=permMissing();if(m.length){PRMTRY[m[0]]=1;native('requestPerm',m[0])}else PRMSTEP=false}
+function permTick(){const s=permGet();if(!s)return;const j=JSON.stringify(s);if(j===_prms)return;const before=PERMS.filter(p=>PRMS&&PRMS[p[0]]).length;_prms=j;PRMS=s;permDraw();
+ const after=PERMS.filter(p=>s[p[0]]).length;if(PRMSTEP&&after>before)setTimeout(permNext,500)}
+function openPerm(manual){PRMMAN=!!manual;PRMS=permGet()||{};_prms=JSON.stringify(PRMS);permDraw();const el=$('perm');el.style.display='flex';el.classList.add('on');clearInterval(PRMT);PRMT=setInterval(permTick,700)}
+function permDone(){const el=$('perm');el.style.display='none';el.classList.remove('on');clearInterval(PRMT);PRMSTEP=false;
+ if(!PRMMAN&&S.consent!==POLICY_VERSION)$('consent').style.display='flex';PRMMAN=false;syncNative()}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!AOD_MODE&&!$('perm').classList.contains('on')&&permMissing().length)openPerm(false)});
+
 /* ---------- Boot ---------- */
 applyTheme();
 ['splashLogo','consentLogo','topLogo'].forEach(i=>$(i).innerHTML=logoEl());
-if(AOD_MODE){$('splash').style.display='none';$('consent').style.display='none';startAod()}else{setTimeout(()=>{$('splash').classList.add('out');if(S.consent!==POLICY_VERSION)$('consent').style.display='flex'},1700);if(AO.bg)native('setBackground',true)}
+if(AOD_MODE){$('splash').style.display='none';$('consent').style.display='none';startAod()}else{if(permMissing().length)openPerm(false);setTimeout(()=>{$('splash').classList.add('out');if(!$('perm').classList.contains('on')&&S.consent!==POLICY_VERSION)$('consent').style.display='flex'},1700);if(AO.bg)native('setBackground',true)}
 S.wr=Object.assign({on:false,mins:360,src:'all',where:'both',wifi:true},S.wr||{});
 loadCatalog();syncNative();syncSched();setTimeout(()=>{if((AO.notif||AO.media)&&!hasNA()&&!sessionStorage.getItem('naAsked')){sessionStorage.setItem('naAsked','1');askNA()}},2500);
 addEventListener('resize',()=>{if($('aod').classList.contains('show'))tick();refreshPv()});
