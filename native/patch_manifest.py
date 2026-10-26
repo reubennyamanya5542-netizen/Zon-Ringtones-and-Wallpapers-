@@ -9,6 +9,7 @@ svc = '''    <service android:name=".NotifService" android:label="Zon" android:e
     <service android:name=".AodService" android:exported="false" android:foregroundServiceType="specialUse">
       <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Always-on display shown when the screen turns off"/>
     </service>
+    <receiver android:name=".BootReceiver" android:exported="true"><intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/></intent-filter></receiver>
     <service android:name=".WallJob" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false"/>
     <activity android:name=".AodActivity" android:exported="false" android:launchMode="singleTask" android:excludeFromRecents="true"
         android:showWhenLocked="true" android:turnScreenOn="true" android:theme="@style/AppTheme.NoActionBar"

@@ -160,6 +160,7 @@ public class ZonBridge {
     ui(() -> a.setRequestedOrientation(on ? android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR : android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
   }
   @JavascriptInterface public void setBackground(boolean on) {
+    c.getSharedPreferences("zon", 0).edit().putBoolean("bg_on", on).apply();
     if (!on) { c.stopService(new Intent(c, AodService.class)); return; }
     if (!Settings.canDrawOverlays(c)) {
       ui(() -> start(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + c.getPackageName()))));
